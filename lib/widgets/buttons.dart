@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class ClickableWidget extends StatelessWidget {
@@ -30,13 +29,13 @@ class ClickableWidget extends StatelessWidget {
 
     return ClipRRect(
         child: Material(
-          elevation: 10,
-          child: enabled
-              ? InkWell(
-                  onTap: onTap,
-                  child: contentWidget,
-                )
-              : contentWidget,
-        ));
+      color: Colors.transparent,
+      child: enabled
+          ? InkWell(
+              onTap: onTap,
+              child: contentWidget,
+            )
+          : contentWidget,
+    ));
   }
 }

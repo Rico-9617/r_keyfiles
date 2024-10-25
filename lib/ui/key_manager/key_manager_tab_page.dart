@@ -1,18 +1,17 @@
-import 'dart:io';
 import 'dart:core';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:kdbx_lib/kdbx.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
+import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
+import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/widgets/buttons.dart';
 import 'package:r_backup_tool/widgets/content_scaffold.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:path/path.dart' as p;
+import 'package:r_backup_tool/widgets/scrollable_tab_bar.dart';
 
 class KeyManagerTabPage extends StatefulWidget {
   const KeyManagerTabPage({super.key});
@@ -23,31 +22,14 @@ class KeyManagerTabPage extends StatefulWidget {
 
 class _KeyManagerTabPageState extends State<KeyManagerTabPage>
     with SingleTickerProviderStateMixin {
-  final filesNotifier = ValueNotifier<List<KdbxFileWrapper>>(List.empty());
-  final currentFile = ValueNotifier<KdbxFileWrapper?>(null);
+  final keyStoreRepo = KeyStoreRepo();
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Permission.storage.onGrantedCallback(() async {
-        final saved = (await SharedPreferences.getInstance())
-            .getStringList('_k_files')
-            ?.map((path) => File(path));
-        if (saved != null && saved.isNotEmpty) {
-          final kdbxFiles = <KdbxFileWrapper>[];
-          for (final file in saved) {
-            if (file.existsSync() &&
-                file.statSync().type == FileSystemEntityType.file) {
-              final wrapper = KdbxFileWrapper(file.path);
-              wrapper.title.value = p.basename(file.path);
-            }
-          }
-          filesNotifier.value = kdbxFiles;
-          currentFile.value = kdbxFiles.firstOrNull;
-        }
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await compute(keyStoreRepo.loadSavedFiles(), null);
     });
   }
 
@@ -66,89 +48,94 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                 ClickableWidget(
                     height: 50,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    onTap: () {},
+                    onTap: () async {
+                      PasswordDialog().show(context);
+                    },
                     child: const Text(
                       "新建",
-                      style: AppTexts.textButtonNormal,
+                      style: AppTextStyle.textButtonNormal,
                     )),
                 ClickableWidget(
                     height: 50,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     onTap: () async {
-                      await Permission.storage.onGrantedCallback(() async {
-                        FilePickerResult? result =
-                            await FilePicker.platform.pickFiles();
+                      FilePickerResult? result =
+                          await FilePicker.platform.pickFiles();
 
-                        if (result != null) {
-                          final file = File(result.files.single.path!);
-                          // Decrypt the KDBX file
-                          final kdbx = await KdbxFormat().read(
-                              file.readAsBytesSync(),
-                              Credentials(ProtectedValue.fromString('123456')));
+                      if (result != null) {
+                        final file = File(result.files.single.path!);
+                        // Decrypt the KDBX file
+                        final kdbx = await KdbxFormat().read(
+                            file.readAsBytesSync(),
+                            Credentials(ProtectedValue.fromString('123456')));
 
-                          final wrapper = KdbxFileWrapper(file.path);
-                          wrapper.kdbxFile = kdbx;
-                          wrapper.title.value = p.basename(file.path);
-                          final wrapper1 = KdbxFileWrapper(file.path);
-                          wrapper1.kdbxFile = kdbx;
-                          wrapper1.title.value = '${p.basename(file.path)}1';
+                        // final wrapper = KdbxFileWrapper(file.path);
+                        // wrapper.kdbxFile = kdbx;
+                        // wrapper.title.value = p.basename(file.path);
+                        // final wrapper1 = KdbxFileWrapper(file.path);
+                        // wrapper1.kdbxFile = kdbx;
+                        // wrapper1.title.value = '${p.basename(file.path)}1';
+                        //
+                        // filesNotifier.value = [
+                        //   wrapper,
+                        //   wrapper1,
+                        // ];
+                        // currentFile.value = filesNotifier.value.firstOrNull;
 
-                          filesNotifier.value = [
-                            wrapper,
-                            wrapper1,
-                          ];
-                          currentFile.value = filesNotifier.value.firstOrNull;
-
-                          print('body.rootGroup: ${kdbx.body.rootGroup}');
-                          print('body.node: ${kdbx.body.node}');
-                          _loop(kdbx.body.rootGroup.entries);
-                        } else {
-                          EasyLoading.showToast('文件解析失败！');
-                        }
-                      }).request();
+                        print('body.rootGroup: ${kdbx.body.rootGroup}');
+                        print('body.node: ${kdbx.body.node}');
+                        _loop(kdbx.body.rootGroup.entries);
+                      } else {
+                        EasyLoading.showToast('文件解析失败！');
+                      }
                     },
                     child: const Text(
                       "打开",
-                      style: AppTexts.textButtonNormal,
+                      style: AppTextStyle.textButtonNormal,
                     ))
               ],
             ),
           ),
           ValueListenableBuilder(
-              valueListenable: filesNotifier,
+              valueListenable: keyStoreRepo.savedKeyFiles,
               builder: (_, files, __) {
                 return files.isEmpty
                     ? const SizedBox()
                     : Container(
                         color: Colors.white70,
                         height: 40,
-                        child: TabBarView(
-                            controller: TabController(
-                                length: files.length, vsync: this),
+                        child: ScrollableTabBar(
                             children: files
                                 .map((e) => GestureDetector(
                                       onTap: () {
-                                        currentFile.value = e;
+                                        keyStoreRepo.currentFile.value = e;
                                       },
-                                      child: ValueListenableBuilder(
-                                        builder: (_, file, __) {
-                                          return ValueListenableBuilder(
-                                            builder: (_, title, __) {
-                                              return Text(
-                                                title,
-                                                style: file == e
-                                                    ? AppTexts.textPrimary
-                                                    : AppTexts.textDisable,
-                                              );
-                                            },
-                                            valueListenable: e.title,
-                                          );
-                                        },
-                                        valueListenable: currentFile,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4),
+                                        child: ValueListenableBuilder(
+                                          builder: (_, file, __) {
+                                            return ValueListenableBuilder(
+                                              builder: (_, title, __) {
+                                                return Text(
+                                                  title,
+                                                  style: file == e
+                                                      ? AppTextStyle.textPrimary
+                                                      : AppTextStyle
+                                                          .textDisable,
+                                                );
+                                              },
+                                              valueListenable: e.title,
+                                            );
+                                          },
+                                          valueListenable:
+                                              keyStoreRepo.currentFile,
+                                        ),
                                       ),
                                     ))
-                                .toList()),
-                      );
+                                .toList()));
               }),
           Expanded(
               child: Container(
@@ -168,7 +155,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                             builder: (_, title, __) {
                               return Text(
                                 title,
-                                style: AppTexts.textPrimary,
+                                style: AppTextStyle.textPrimary,
                               );
                             },
                             valueListenable: file.title,
@@ -184,7 +171,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         ],
                       );
               },
-              valueListenable: currentFile,
+              valueListenable: keyStoreRepo.currentFile,
             ),
           ))
         ],

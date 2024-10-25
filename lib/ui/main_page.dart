@@ -24,18 +24,15 @@ class MainPage extends StatelessWidget {
                     _ => const SizedBox.shrink(),
                   };
                 })),
-        SizedBox(
-          height: 80,
-
-          child: ValueListenableBuilder(
-              valueListenable: _tab,
-              builder: (context, value, child) {
+        ValueListenableBuilder(
+            valueListenable: _tab,
+            builder: (context, value, child) {
               return BottomNavigationBar(
-              currentIndex:value,
+                currentIndex: value,
                 selectedItemColor: AppColors.text0,
                 unselectedItemColor: AppColors.text1,
                 onTap: (index) {
-                  _tab.value =index;
+                  _tab.value = index;
                 },
                 items: const [
                   BottomNavigationBarItem(
@@ -46,9 +43,7 @@ class MainPage extends StatelessWidget {
                       icon: Icon(Icons.contact_page), label: '通讯录'),
                 ],
               );
-            }
-          ),
-        ),
+            }),
       ],
     );
   }
