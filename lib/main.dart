@@ -20,7 +20,10 @@ void main() {
 
   runApp(const MyApp());
 
-  EasyLoading.instance.maskType = EasyLoadingMaskType.none;
+  EasyLoading.instance
+    ..maskType = EasyLoadingMaskType.custom
+    ..maskColor = Colors.transparent
+    ..indicatorType = EasyLoadingIndicatorType.fadingGrid;
 }
 
 class MyApp extends StatelessWidget {
@@ -29,6 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: EasyLoading.init(),
       home: Directionality(
         textDirection: TextDirection.ltr,
         child: Stack(

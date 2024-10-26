@@ -25,10 +25,10 @@ class EncryptTool {
     }
   }
 
-  static String decrypt(String base64Data, String secretKey) {
+  static String decrypt(String data, String secretKey) {
     try {
       return _createEncryptor(secretKey).decrypt(
-          encryptKey.Encrypted(base64Decode(base64Data)),
+          encryptKey.Encrypted(base64Decode(data)),
           iv: encryptKey.IV.fromLength(16));
     } catch (e) {
       if (f.kDebugMode) print('encError: $e');

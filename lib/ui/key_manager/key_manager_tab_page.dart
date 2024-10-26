@@ -48,9 +48,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                 ClickableWidget(
                     height: 50,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    onTap: () async {
-                      PasswordDialog().show(context);
-                    },
+                    onTap: () async {},
                     child: const Text(
                       "新建",
                       style: AppTextStyle.textButtonNormal,
@@ -64,27 +62,22 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
 
                       if (result != null) {
                         final file = File(result.files.single.path!);
-                        // Decrypt the KDBX file
-                        final kdbx = await KdbxFormat().read(
-                            file.readAsBytesSync(),
-                            Credentials(ProtectedValue.fromString('123456')));
-
-                        // final wrapper = KdbxFileWrapper(file.path);
-                        // wrapper.kdbxFile = kdbx;
-                        // wrapper.title.value = p.basename(file.path);
-                        // final wrapper1 = KdbxFileWrapper(file.path);
-                        // wrapper1.kdbxFile = kdbx;
-                        // wrapper1.title.value = '${p.basename(file.path)}1';
-                        //
-                        // filesNotifier.value = [
-                        //   wrapper,
-                        //   wrapper1,
-                        // ];
-                        // currentFile.value = filesNotifier.value.firstOrNull;
-
-                        print('body.rootGroup: ${kdbx.body.rootGroup}');
-                        print('body.node: ${kdbx.body.node}');
-                        _loop(kdbx.body.rootGroup.entries);
+                        if (!(await file.exists()) || !mounted) return;
+                        PasswordDialog(
+                          onConfirm: (p) async {
+                            EasyLoading.show();
+                            final result = await keyStoreRepo
+                                .parseKdbxFile(file, p)
+                                .handleError((e) {
+                              EasyLoading.showToast(e.toString());
+                            }).single;
+                            if (result) {
+                              EasyLoading.dismiss();
+                            }
+                            print('restparse result $result');
+                            return result;
+                          },
+                        ).show(context);
                       } else {
                         EasyLoading.showToast('文件解析失败！');
                       }
