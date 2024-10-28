@@ -9,8 +9,9 @@ class PasswordDialog extends StatefulWidget {
   static const _keyboardSymbolData = r'!@#$%^&*()`~-_=+[{]};:’”\|,<.>/?';
 
   final Future<bool> Function(String password) onConfirm;
+  final String? title;
 
-  const PasswordDialog({super.key, required this.onConfirm});
+  const PasswordDialog({super.key, required this.onConfirm, this.title});
 
   @override
   State<PasswordDialog> createState() => _PasswordDialogState();
@@ -80,8 +81,8 @@ class _PasswordDialogState extends State<PasswordDialog> {
                 const SizedBox(
                   height: 12,
                 ),
-                const Text(
-                  '请输入密码',
+                Text(
+                  widget.title ?? '请输入密码',
                   style: AppTextStyle.textPrimary,
                 ),
                 const SizedBox(

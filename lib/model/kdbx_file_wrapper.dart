@@ -4,11 +4,13 @@ import 'package:kdbx_lib/kdbx.dart';
 class KdbxFileWrapper {
   final title = ValueNotifier('');
   String path = '';
+  String id = '';
+  bool externalStore;
   KdbxFile? kdbxFile;
   final encrypted = ValueNotifier(true);
   final entities = ValueNotifier(<KdbxEntryWrapper>[]);
 
-  KdbxFileWrapper(this.path);
+  KdbxFileWrapper(this.path, {this.externalStore = false});
 }
 
 class KdbxEntryWrapper {

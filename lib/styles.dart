@@ -4,6 +4,8 @@ import 'package:r_backup_tool/colors.dart';
 class AppTextStyle {
   AppTextStyle._();
 
+  static const TextStyle textWhite =
+      TextStyle(color: Colors.white, fontSize: 14);
   static const TextStyle textButtonNormal =
       TextStyle(color: AppColors.text0, fontSize: 14);
   static const TextStyle textPrimary =

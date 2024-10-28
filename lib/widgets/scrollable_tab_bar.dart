@@ -48,9 +48,6 @@ class _ScrollableTabBarState extends State<ScrollableTabBar> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          const SizedBox(
-            width: 6,
-          ),
           for (int index = 0; index < widget.children.length; index++) ...[
             GestureDetector(
               key: itemKeys[index],
@@ -61,9 +58,6 @@ class _ScrollableTabBarState extends State<ScrollableTabBar> {
               child: widget.children[index],
             )
           ],
-          const SizedBox(
-            width: 6,
-          ),
         ],
       ),
     );

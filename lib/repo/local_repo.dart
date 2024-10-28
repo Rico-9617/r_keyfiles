@@ -7,12 +7,12 @@ class LocalRepo {
 
   static late SharedPreferencesAsync savor;
 
-  static get instance {
+  static LocalRepo get instance {
     if (_instance == null) {
       _instance = LocalRepo._();
       savor = SharedPreferencesAsync();
     }
-    return _instance;
+    return _instance!;
   }
 
   saveString(String key, String data) async {
