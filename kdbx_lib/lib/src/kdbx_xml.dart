@@ -114,6 +114,7 @@ abstract class KdbxSubTextNode<T> extends KdbxSubNode<T?> {
     if (get() == value && force != true) {
       return false;
     }
+    _logger.info('test set name $value');
     node.modify(() {
       final el =
           node.node.findElements(name).singleWhere((x) => true, orElse: () {

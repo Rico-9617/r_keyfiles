@@ -22,7 +22,6 @@ class KeyStoreDetail extends StatelessWidget {
         builder: (_, encrypted, __) => encrypted
             ? Stack(
                 children: [
-                  Text('data ${keyFile.title.value} ${keyFile.hashCode}'),
                   Center(
                     child: OutlinedButton(
                         onPressed: () {
@@ -55,69 +54,104 @@ class KeyStoreDetail extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton(
-                            onPressed: () {
-                              TextInputDialog(
-                                onConfirm: (text) async {
-                                  if (text.isEmpty) {
-                                    EasyLoading.showToast('名称不能为空!');
-                                    return false;
-                                  }
-                                  await detailController.modifyKeyStoreTitle(
-                                      keyFile, text);
-                                  return true;
+                    ValueListenableBuilder(
+                      valueListenable: keyFile.externalStore,
+                      builder: (_, isExternal, child) {
+                        return Wrap(spacing: 10, runSpacing: 8, children: [
+                          if (isExternal)
+                            OutlinedButton(
+                                onPressed: () {
+                                  PasswordDialog(
+                                    onConfirm: (p) async {
+                                      EasyLoading.show();
+                                      final result = await detailController
+                                          .importExternalKeyStore(keyFile, p);
+                                      if (result != null && result.isNotEmpty) {
+                                        EasyLoading.showToast(result);
+                                      } else {
+                                        EasyLoading.dismiss();
+                                      }
+                                      return result == null;
+                                    },
+                                  ).show(context);
                                 },
-                                title: '设置新名称',
-                                content: keyFile.title.value,
-                              ).show(context);
-                            },
-                            child: const Text('修改名称')),
-                        OutlinedButton(
-                            onPressed: () {
-                              PasswordDialog(
-                                title: '设置新密码',
-                                onConfirm: (p) async {
-                                  detailController.modifyKeyFilePassword(
-                                      keyFile, p);
-                                  return true;
+                                child: const Text('导入以编辑')),
+                          if (!isExternal)
+                            OutlinedButton(
+                                onPressed: () {
+                                  TextInputDialog(
+                                    onConfirm: (text) async {
+                                      if (text.isEmpty) {
+                                        EasyLoading.showToast('名称不能为空!');
+                                        return false;
+                                      }
+                                      EasyLoading.show();
+                                      final result = await detailController
+                                          .modifyKeyStoreTitle(keyFile, text);
+                                      if (result != null && result.isNotEmpty) {
+                                        EasyLoading.showToast(result);
+                                      } else {
+                                        EasyLoading.dismiss();
+                                      }
+                                      return result == null;
+                                    },
+                                    title: '设置新名称',
+                                    content: keyFile.title.value,
+                                  ).show(context);
                                 },
-                              ).show(context);
-                            },
-                            child: const Text('修改密码')),
-                        if (!keyFile.externalStore)
-                          OutlinedButton(onPressed: () {}, child: Text('导出')),
-                        OutlinedButton(
-                            onPressed: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                        content: const Text('是否删除该文件?'),
-                                        actions: [
-                                          TextButton(
-                                            child: const Text('取消'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: const Text('确定'),
-                                            onPressed: () async {
-                                              Navigator.of(context).pop();
-                                              EasyLoading.show();
-                                              await detailController
-                                                  .deleteKeyStore(keyFile);
-                                              EasyLoading.dismiss();
-                                            },
-                                          ),
-                                        ],
-                                      ));
-                            },
-                            child: const Text('删除')),
-                      ],
+                                child: const Text('修改名称')),
+                          if (!isExternal)
+                            OutlinedButton(
+                                onPressed: () {
+                                  PasswordDialog(
+                                    title: '设置新密码',
+                                    onConfirm: (p) async {
+                                      EasyLoading.show();
+                                      final result = await detailController
+                                          .modifyKeyFilePassword(keyFile, p);
+                                      if (result != null && result.isNotEmpty) {
+                                        EasyLoading.showToast(result);
+                                      } else {
+                                        EasyLoading.dismiss();
+                                      }
+                                      return result == null;
+                                    },
+                                  ).show(context);
+                                },
+                                child: const Text('修改密码')),
+                          if (!isExternal)
+                            OutlinedButton(
+                                onPressed: () {}, child: const Text('导出')),
+                          child!,
+                        ]);
+                      },
+                      child: OutlinedButton(
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                      content: const Text('是否删除该文件?'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('取消'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: const Text('确定'),
+                                          onPressed: () async {
+                                            Navigator.of(context).pop();
+                                            EasyLoading.show();
+                                            await detailController
+                                                .deleteKeyStore(keyFile);
+                                            EasyLoading.dismiss();
+                                          },
+                                        ),
+                                      ],
+                                    ));
+                          },
+                          child: const Text('删除')),
                     )
                   ],
                 ),

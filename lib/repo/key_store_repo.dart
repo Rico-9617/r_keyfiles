@@ -3,7 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:kdbx_lib/kdbx.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:r_backup_tool/foundation/list_value_notifier.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/local_repo.dart';
 
@@ -17,6 +20,7 @@ class KeyStoreRepo {
     return _instance!;
   }
 
+  final kdbxFormat = KdbxFormat();
   final savedKeyFiles = ListValueNotifier<KdbxFileWrapper>([]);
   final ValueNotifier<KdbxFileWrapper?> currentFile =
       ValueNotifier<KdbxFileWrapper?>(null);
@@ -29,7 +33,6 @@ class KeyStoreRepo {
       final file = KdbxFileWrapper(item[3], externalStore: bool.parse(item[1]));
       file.title.value = item[0];
       file.id = item[2];
-      print('testchange load saved file $index ${item}');
       if (index == 0) {
         currentFile.value = file;
       }
@@ -41,7 +44,7 @@ class KeyStoreRepo {
     final streamController = StreamController<bool>();
     Future<void> decrypt() async {
       try {
-        final kdbx = await KdbxFormat().read(
+        final kdbx = await kdbxFormat.read(
             File(fileWrapper.path).readAsBytesSync(),
             Credentials(ProtectedValue.fromString(psw)));
         print('restparse body.rootGroup: ${kdbx.body.rootGroup.name.get()}');
@@ -62,9 +65,7 @@ class KeyStoreRepo {
         streamController.add(false);
         await streamController.close();
       } catch (e) {
-        if (kDebugMode) {
-          print('restparse error: ${e}');
-        }
+        logger.e(e);
         streamController.addError('解析失败');
         streamController.add(false);
       }
@@ -85,7 +86,7 @@ class KeyStoreRepo {
     }
     saveFiles(savedFiles);
 
-    if (!fileWrapper.externalStore) {
+    if (!fileWrapper.externalStore.value) {
       await File(fileWrapper.path).delete();
     }
 
@@ -99,7 +100,46 @@ class KeyStoreRepo {
   Future<List<String>> getSavedFiles() async =>
       [...(await LocalRepo.instance.getStrings('_k_files') ?? List.empty())];
 
-  saveFiles(List<String> datas) {
-    LocalRepo.instance.saveStrings('_k_files', datas);
+  saveFiles(List<String> dataList) {
+    LocalRepo.instance.saveStrings('_k_files', dataList);
+  }
+
+  updateSavedFiles(KdbxFileWrapper fileWrapper,
+      List<String> Function(List<String> target) onUpdate) async {
+    final savedList = await KeyStoreRepo.instance.getSavedFiles();
+    for (int index = 0; index < savedList.length; index++) {
+      final arr = savedList[index].split('@');
+      if (arr[2] == fileWrapper.id) {
+        savedList[index] = onUpdate(arr).join('@');
+        KeyStoreRepo.instance.saveFiles(savedList);
+        break;
+      }
+    }
+  }
+
+  Future<Directory> getInternalFolder() async {
+    final folder =
+        Directory(p.join((await getTemporaryDirectory()).path, 'kf'));
+    if (!await folder.exists()) {
+      await folder.create();
+    }
+    return folder;
+  }
+
+  Future<String?> saveKeyStore(KdbxFileWrapper fileWrapper) async {
+    if (fileWrapper.externalStore.value) {
+      return '外部文件无法保存';
+    }
+    if (fileWrapper.encrypted.value || fileWrapper.kdbxFile == null) {
+      return '文件未解锁';
+    }
+    try {
+      final fileData = await fileWrapper.kdbxFile!.save();
+      await File(fileWrapper.path).writeAsBytes(fileData, flush: true);
+      return null;
+    } catch (e) {
+      logger.e(e);
+    }
+    return '保存失败';
   }
 }

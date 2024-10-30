@@ -7,6 +7,7 @@ import 'package:archive/archive.dart';
 import 'package:argon2_ffi_base/argon2_ffi_base.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:flutter/foundation.dart';
 import 'package:kdbx_lib/kdbx.dart';
 import 'package:kdbx_lib/src/crypto/key_encrypter_kdf.dart';
 import 'package:kdbx_lib/src/crypto/protected_salt_generator.dart';
@@ -22,13 +23,17 @@ import 'package:kdbx_lib/src/kdbx_xml.dart';
 import 'package:kdbx_lib/src/utils/byte_utils.dart';
 import 'package:kdbx_lib/src/utils/sequence.dart';
 import 'package:logging/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
 import 'package:quiver/iterables.dart';
 import 'package:supercharged_dart/supercharged_dart.dart';
 import 'package:xml/xml.dart' as xml;
 
-final _logger = Logger('kdbx.format');
+final _logger = Logger('kdbx.format')
+  ..onRecord.listen((record) {
+    if (kDebugMode)
+      print(
+          '${record.loggerName}->${record.level.name}: ${record.time}: ${record.message}');
+  });
 
 /// Context used during reading and writing.
 class KdbxReadWriteContext {
@@ -323,12 +328,15 @@ class KdbxBody extends KdbxNode {
 
 abstract class OverwriteContext {
   const OverwriteContext();
+
   static const noop = OverwriteContextNoop();
+
   void trackChange(KdbxObject object, {String? node, String? debug});
 }
 
 class OverwriteContextNoop implements OverwriteContext {
   const OverwriteContextNoop();
+
   @override
   void trackChange(KdbxObject object, {String? node, String? debug}) {}
 }
@@ -360,6 +368,7 @@ class MergeWarning {
 
 class MergeContext implements OverwriteContext {
   MergeContext({required this.objectIndex, required this.deletedObjects});
+
   final Map<KdbxUuid, KdbxObject> objectIndex;
   final Map<KdbxUuid?, KdbxDeletedObject> deletedObjects;
   final Map<KdbxUuid, KdbxObject> merged = {};

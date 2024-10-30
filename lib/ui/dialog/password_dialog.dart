@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/styles.dart';
+import 'package:vibration/vibration.dart';
 
 class PasswordDialog extends StatefulWidget {
   static const _keyboardLetterData = '1234567890abcdefghijklmnopqrstuvwxyz---^';
@@ -162,8 +163,9 @@ class _PasswordDialogState extends State<PasswordDialog> {
         itemBuilder: (_, index) {
           final symbol = PasswordDialog._keyboardSymbolData[index];
           return GestureDetector(
-              onTap: () {
+              onTap: () async {
                 textNotifier.value += symbol;
+                await vibrate();
               },
               child: Container(
                 alignment: Alignment.center,
@@ -218,10 +220,11 @@ class _PasswordDialogState extends State<PasswordDialog> {
                       ),
                     )
                   : GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         textNotifier.value += letterUpperCase.value > 0
                             ? symbol.toUpperCase()
                             : symbol;
+                        await vibrate();
                       },
                       child: Container(
                         alignment: Alignment.center,
@@ -305,5 +308,15 @@ class _PasswordDialogState extends State<PasswordDialog> {
         ),
       ],
     );
+  }
+}
+
+vibrate() async {
+  if (await Vibration.hasCustomVibrationsSupport() == true) {
+    Vibration.vibrate(duration: 500);
+  } else {
+    Vibration.vibrate();
+    await Future.delayed(const Duration(milliseconds: 500));
+    Vibration.cancel();
   }
 }

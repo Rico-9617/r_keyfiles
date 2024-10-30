@@ -5,12 +5,14 @@ class KdbxFileWrapper {
   final title = ValueNotifier('');
   String path = '';
   String id = '';
-  bool externalStore;
+  final externalStore = ValueNotifier(false);
   KdbxFile? kdbxFile;
   final encrypted = ValueNotifier(true);
   final entities = ValueNotifier(<KdbxEntryWrapper>[]);
 
-  KdbxFileWrapper(this.path, {this.externalStore = false});
+  KdbxFileWrapper(this.path, {bool externalStore = false}) {
+    this.externalStore.value = externalStore;
+  }
 }
 
 class KdbxEntryWrapper {

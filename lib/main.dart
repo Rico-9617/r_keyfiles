@@ -1,7 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:logger/logger.dart';
 import 'package:r_backup_tool/ui/main_page.dart';
+
+final logger = Logger(
+  printer: PrettyPrinter(),
+  output: ConsoleOutput(),
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,5 +58,15 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ConsoleOutput extends LogOutput {
+  @override
+  void output(OutputEvent event) {
+    if (!kDebugMode) return;
+    for (var line in event.lines) {
+      print(line);
+    }
   }
 }
