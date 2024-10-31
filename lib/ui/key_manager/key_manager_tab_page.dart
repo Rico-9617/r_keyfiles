@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_file_controller.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
@@ -113,7 +114,8 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                                                       .symmetric(
                                                       horizontal: 12),
                                                   color: file == e
-                                                      ? Colors.cyanAccent
+                                                      ? AppColors
+                                                          .detailBackground
                                                       : Colors.transparent,
                                                   child: ValueListenableBuilder(
                                                     builder: (_, title, __) {
@@ -125,7 +127,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                                                                 .copyWith(
                                                                     fontSize:
                                                                         16)
-                                                            : TextStyle(
+                                                            : const TextStyle(
                                                                 color: Colors
                                                                     .black54),
                                                       );
@@ -147,10 +149,9 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
           Expanded(
               child: Container(
             width: double.infinity,
-            color: Colors.cyanAccent,
+            color: AppColors.detailBackground,
             child: ValueListenableBuilder(
               builder: (_, file, __) {
-                print('testchange page ${file?.title.value}');
                 return file == null
                     ? const SizedBox()
                     : KeyStoreDetail(

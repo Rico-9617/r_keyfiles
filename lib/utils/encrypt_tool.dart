@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encryptKey;
-import 'package:flutter/foundation.dart' as f;
+import 'package:r_backup_tool/main.dart';
 
 class EncryptTool {
   EncryptTool._();
@@ -14,25 +14,25 @@ class EncryptTool {
           mode: encryptKey.AESMode.ecb,
           padding: 'PKCS7'));
 
-  static String encrypt(String data, String secretKey) {
+  static String? encrypt(String data, String secretKey) {
     try {
       return base64Encode(_createEncryptor(secretKey)
           .encrypt(data, iv: encryptKey.IV.fromLength(16))
           .bytes);
     } catch (e) {
-      if (f.kDebugMode) print('encError: $e');
-      return "";
+      logger.e('encError: $e');
+      return null;
     }
   }
 
-  static String decrypt(String data, String secretKey) {
+  static String? decrypt(String data, String secretKey) {
     try {
       return _createEncryptor(secretKey).decrypt(
           encryptKey.Encrypted(base64Decode(data)),
           iv: encryptKey.IV.fromLength(16));
     } catch (e) {
-      if (f.kDebugMode) print('encError: $e');
-      return "";
+      logger.e('encError: $e');
+      return null;
     }
   }
 

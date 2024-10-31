@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:kdbx_lib/kdbx.dart';
+import 'package:r_backup_tool/foundation/list_value_notifier.dart';
 
 class KdbxFileWrapper {
   final title = ValueNotifier('');
@@ -8,7 +9,7 @@ class KdbxFileWrapper {
   final externalStore = ValueNotifier(false);
   KdbxFile? kdbxFile;
   final encrypted = ValueNotifier(true);
-  final entities = ValueNotifier(<KdbxEntryWrapper>[]);
+  final entities = ListValueNotifier(<KdbxEntryWrapper>[]);
 
   KdbxFileWrapper(this.path, {bool externalStore = false}) {
     this.externalStore.value = externalStore;

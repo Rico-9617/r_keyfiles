@@ -15,11 +15,12 @@ class TextInputDialog extends StatefulWidget {
   @override
   State<TextInputDialog> createState() => _TextInputDialogState();
 
-  show(BuildContext context) {
+  static show(
+      BuildContext context, Widget Function(BuildContext context) builder) {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (_, __, ___) => this,
+        pageBuilder: (_, __, ___) => builder.call(context),
         transitionsBuilder: (_, animation, __, child) {
           return Stack(
             children: [

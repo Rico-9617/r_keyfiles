@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:kdbx_lib/kdbx.dart';
 import 'package:path/path.dart' as p;
 import 'package:r_backup_tool/main.dart';
@@ -10,11 +9,20 @@ import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/utils/encrypt_tool.dart';
 
 class KeyStoreDetailController {
+  const KeyStoreDetailController();
+
   Stream<bool> decodeSavedFile(KdbxFileWrapper fileWrapper, String psw) {
     final streamController = StreamController<bool>();
     Future<void> parse() async {
       try {
-        fileWrapper.path = EncryptTool.decrypt(fileWrapper.path, psw);
+        final path = EncryptTool.decrypt(fileWrapper.path, psw);
+        if (path == null) {
+          streamController.addError('密码错误!');
+          streamController.add(false);
+          await streamController.close();
+          return;
+        }
+        fileWrapper.path = path;
         final file = File(fileWrapper.path);
         if (await file.exists()) {
           await streamController.addStream(
@@ -26,13 +34,12 @@ class KeyStoreDetailController {
           await streamController.close();
         }
       } on PathNotFoundException catch (e) {
+        logger.e(e);
         streamController.addError(e);
         streamController.add(false);
         await streamController.close();
       } catch (e) {
-        if (kDebugMode) {
-          print('restparse decode error: $e');
-        }
+        logger.e(e);
         streamController.addError('解析失败!');
         streamController.add(false);
         await streamController.close();
@@ -52,7 +59,12 @@ class KeyStoreDetailController {
     if (saveResult != null) return saveResult;
 
     await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-      data[3] = EncryptTool.encrypt(fileWrapper.path, psw);
+      final result = EncryptTool.encrypt(fileWrapper.path, psw);
+      if (result == null) {
+        throw Exception();
+      } else {
+        data[3] = result;
+      }
       return data;
     });
     return null;
@@ -82,12 +94,15 @@ class KeyStoreDetailController {
         internalFile = File(p.join(folder,
             '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}'));
       }
-      logger.d(internalFile.path);
       await File(fileWrapper.path).copy(internalFile.path);
       await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
+        final result = EncryptTool.encrypt(fileWrapper.path, psw);
+        if (result == null) {
+          throw Exception();
+        } else {
+          data[3] = result;
+        }
         data[1] = 'false';
-        data[3] = EncryptTool.encrypt(internalFile.path, psw);
-        logger.d(data.join('@'));
         return data;
       });
       fileWrapper.path = internalFile.path;

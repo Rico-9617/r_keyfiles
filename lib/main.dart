@@ -4,11 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:logger/logger.dart';
 import 'package:r_backup_tool/ui/main_page.dart';
+import 'package:r_backup_tool/utils/native_tool.dart';
 
 final logger = Logger(
   printer: PrettyPrinter(),
   output: ConsoleOutput(),
 );
+
+final hasExternalStoragePermission = ValueNotifier(false);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,11 +36,21 @@ void main() {
     ..indicatorType = EasyLoadingIndicatorType.fadingGrid;
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      hasExternalStoragePermission.value = await checkStoragePermission();
+      logger.d(
+          'hasExternalStoragePermission ${hasExternalStoragePermission.value}');
+    });
     return MaterialApp(
       builder: EasyLoading.init(),
       home: Directionality(

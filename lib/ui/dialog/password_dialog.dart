@@ -11,8 +11,13 @@ class PasswordDialog extends StatefulWidget {
 
   final Future<bool> Function(String password) onConfirm;
   final String? title;
+  final bool requireConfirm;
 
-  const PasswordDialog({super.key, required this.onConfirm, this.title});
+  const PasswordDialog(
+      {super.key,
+      required this.onConfirm,
+      this.title,
+      this.requireConfirm = false});
 
   @override
   State<PasswordDialog> createState() => _PasswordDialogState();
@@ -131,11 +136,40 @@ class _PasswordDialogState extends State<PasswordDialog> {
                         onPressed: () async {
                           if (_loading) return;
                           _loading = true;
-                          if (await widget.onConfirm.call(textNotifier.value) &&
-                              mounted) {
-                            Navigator.of(context).pop();
+                          callback() async {
+                            if (await widget.onConfirm
+                                    .call(textNotifier.value) &&
+                                mounted) {
+                              Navigator.of(context).pop();
+                            }
+                            _loading = false;
                           }
-                          _loading = false;
+
+                          if (widget.requireConfirm) {
+                            showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                      title: const Text('确认使用该密码？'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('取消'),
+                                          onPressed: () {
+                                            _loading = false;
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: const Text('确定'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            callback();
+                                          },
+                                        ),
+                                      ],
+                                    ));
+                          } else {
+                            await callback();
+                          }
                         },
                         child: const Text('确定')),
                   ],
@@ -165,8 +199,8 @@ class _PasswordDialogState extends State<PasswordDialog> {
           return GestureDetector(
               onTap: () async {
                 textNotifier.value += symbol;
-                await vibrate();
               },
+              onTapDown: (_) async => await vibrate(),
               child: Container(
                 alignment: Alignment.center,
                 color: Colors.blue.withAlpha(10),
@@ -201,6 +235,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                             ? 0
                             : letterUpperCase.value + 1;
                       },
+                      onTapDown: (_) async => await vibrate(),
                       child: Container(
                         color: Colors.blue.withAlpha(10),
                         alignment: Alignment.center,
@@ -224,8 +259,8 @@ class _PasswordDialogState extends State<PasswordDialog> {
                         textNotifier.value += letterUpperCase.value > 0
                             ? symbol.toUpperCase()
                             : symbol;
-                        await vibrate();
                       },
+                      onTapDown: (_) async => await vibrate(),
                       child: Container(
                         alignment: Alignment.center,
                         color: Colors.blue.withAlpha(10),
@@ -299,6 +334,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                       onTap: () {
                         textNotifier.value = text.substring(0, text.length - 1);
                       },
+                      onTapDown: (_) async => await vibrate(),
                       onLongPress: () {
                         textNotifier.value = '';
                       },
@@ -313,10 +349,10 @@ class _PasswordDialogState extends State<PasswordDialog> {
 
 vibrate() async {
   if (await Vibration.hasCustomVibrationsSupport() == true) {
-    Vibration.vibrate(duration: 500);
+    Vibration.vibrate(duration: 70);
   } else {
     Vibration.vibrate();
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 70));
     Vibration.cancel();
   }
 }

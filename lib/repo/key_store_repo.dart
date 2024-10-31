@@ -27,9 +27,11 @@ class KeyStoreRepo {
 
   loadSavedFiles() async {
     final savedFiles = await getSavedFiles();
+    logger.d(savedFiles);
     if (savedFiles.isEmpty) return;
     savedKeyFiles.value = List.generate(savedFiles.length, (index) {
       final item = savedFiles[index].toString().split('@');
+      logger.d(savedFiles[index]);
       final file = KdbxFileWrapper(item[3], externalStore: bool.parse(item[1]));
       file.title.value = item[0];
       file.id = item[2];
@@ -44,6 +46,7 @@ class KeyStoreRepo {
     final streamController = StreamController<bool>();
     Future<void> decrypt() async {
       try {
+        print('restparse  : ${fileWrapper.title.value} ${fileWrapper.path}');
         final kdbx = await kdbxFormat.read(
             File(fileWrapper.path).readAsBytesSync(),
             Credentials(ProtectedValue.fromString(psw)));
@@ -61,6 +64,7 @@ class KeyStoreRepo {
         streamController.addError('密码错误!');
         streamController.add(false);
       } on PathNotFoundException catch (e) {
+        logger.e(e);
         streamController.addError(e);
         streamController.add(false);
         await streamController.close();
