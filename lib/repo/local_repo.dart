@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalRepo {
@@ -13,6 +18,24 @@ class LocalRepo {
       savor = SharedPreferencesAsync();
     }
     return _instance!;
+  }
+
+  static Future<Directory> _getConfigFolder() async {
+    final directory = Directory(
+        p.join((await getApplicationDocumentsDirectory()).path, '.app_conf'));
+    logger.d(directory);
+    if (!await directory.exists()) {
+      await directory.create();
+    }
+    return directory;
+  }
+
+  Future<File> getConfigFile({String name = '.def'}) async {
+    final file = File(p.join((await _getConfigFolder()).path, name));
+    if (!await file.exists()) {
+      await file.create();
+    }
+    return file;
   }
 
   saveString(String key, String data) async {

@@ -10,8 +10,10 @@ import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
-import 'package:r_backup_tool/ui/key_manager/entry_detail_dialog.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
+import 'package:r_backup_tool/widgets/transparent_page_route.dart';
+
+import 'entry_detail.dart';
 
 class KeyStoreDetail extends StatelessWidget {
   final KdbxFileWrapper keyFile;
@@ -173,7 +175,8 @@ class KeyStoreDetail extends StatelessWidget {
                                             outputDir.path,
                                             '${keyFile.title}.kdbx'));
                                         await outputFile.writeAsBytes(
-                                            await keyFile.kdbxFile!.save());
+                                            await keyFile.kdbxFile!.save(),
+                                            flush: true);
                                       } catch (e) {
                                         logger.e(e);
                                       }
@@ -222,7 +225,7 @@ class KeyStoreDetail extends StatelessWidget {
                     child: Stack(
                       children: [
                         ValueListenableBuilder(
-                            valueListenable: keyFile.entities,
+                            valueListenable: keyFile.entries,
                             builder: (_, entities, __) {
                               return ListView.builder(
                                 padding:
@@ -234,27 +237,15 @@ class KeyStoreDetail extends StatelessWidget {
                                   return GestureDetector(
                                     onTap: () {
                                       Navigator.of(context).push(
-                                          MaterialPageRoute(builder: (context) {
-                                        return EntryDetailDialog(
-                                            keyFile: keyFile,
-                                            entry: item,
-                                            heroTag: heroTag);
-                                      }));
-                                      // showDialog(
-                                      //     context: context,
-                                      //     useSafeArea: false,
-                                      //     builder: (context) =>
-                                      //         Dialog.fullscreen(
-                                      //           backgroundColor:
-                                      //               Colors.transparent,
-                                      //           child: EntryDetailDialog(
-                                      //               keyFile: keyFile,
-                                      //               entry: item,
-                                      //               heroTag: heroTag),
-                                      //         ));
+                                          buildTransparentPageRoute(
+                                              EntryDetail(
+                                                  keyFile: keyFile,
+                                                  entry: item,
+                                                  heroTag: heroTag),
+                                              barrierDismissible: false));
                                     },
                                     child: Hero(
-                                      tag: 'heroTag',
+                                      tag: heroTag,
                                       child: Container(
                                         margin: const EdgeInsets.symmetric(
                                             horizontal: 16, vertical: 4),
@@ -272,15 +263,20 @@ class KeyStoreDetail extends StatelessWidget {
                                                 blurRadius: 2)
                                           ],
                                         ),
-                                        child: ValueListenableBuilder(
-                                            valueListenable: item.title,
-                                            builder: (_, title, __) {
-                                              return Text(
-                                                title?.getText() ?? 'unnamed',
-                                                style: AppTextStyle
-                                                    .textEntityTitle,
-                                              );
-                                            }),
+                                        child: Row(
+                                          children: [
+                                            ValueListenableBuilder(
+                                                valueListenable: item.title,
+                                                builder: (_, title, __) {
+                                                  return Text(
+                                                    title?.getText() ??
+                                                        'unnamed',
+                                                    style: AppTextStyle
+                                                        .textEntityTitle,
+                                                  );
+                                                }),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );

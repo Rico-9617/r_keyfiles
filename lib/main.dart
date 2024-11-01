@@ -53,23 +53,7 @@ class _MyAppState extends State<MyApp> {
     });
     return MaterialApp(
       builder: EasyLoading.init(),
-      home: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Stack(
-          children: [
-            Positioned.fill(child: Navigator(
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(builder: (_) {
-                  return switch (settings.name) {
-                    '/' => MainPage(),
-                    _ => const SizedBox.shrink(),
-                  };
-                });
-              },
-            ))
-          ],
-        ),
-      ),
+      home: MainPage(),
     );
   }
 }

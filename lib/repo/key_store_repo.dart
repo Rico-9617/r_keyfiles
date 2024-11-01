@@ -55,7 +55,7 @@ class KeyStoreRepo {
         fileWrapper.kdbxFile = kdbx;
         fileWrapper.title.value = kdbx.body.rootGroup.name.get() ?? 'Unnamed';
 
-        fileWrapper.entities.value = kdbx.body.rootGroup.entries
+        fileWrapper.entries.value = kdbx.body.rootGroup.entries
             .map((e) => KdbxEntryWrapper(entry: e))
             .toList();
         fileWrapper.encrypted.value = false;
@@ -101,11 +101,18 @@ class KeyStoreRepo {
     }
   }
 
-  Future<List<String>> getSavedFiles() async =>
-      [...(await LocalRepo.instance.getStrings('_k_files') ?? List.empty())];
+  Future<List<String>> getSavedFiles() async {
+    final conf = await LocalRepo.instance.getConfigFile(name: '.ks');
+    final content = String.fromCharCodes(await conf.readAsBytes());
+    return content.isEmpty
+        ? []
+        : String.fromCharCodes(await conf.readAsBytes()).split('<kf>');
+  }
 
-  saveFiles(List<String> dataList) {
-    LocalRepo.instance.saveStrings('_k_files', dataList);
+  saveFiles(List<String> dataList) async {
+    final conf = await LocalRepo.instance.getConfigFile(name: '.ks');
+    dataList.removeWhere((e) => e.isEmpty);
+    conf.writeAsBytes(dataList.join('<kf>').codeUnits, flush: true);
   }
 
   updateSavedFiles(KdbxFileWrapper fileWrapper,

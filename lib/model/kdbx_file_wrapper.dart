@@ -9,7 +9,7 @@ class KdbxFileWrapper {
   final externalStore = ValueNotifier(false);
   KdbxFile? kdbxFile;
   final encrypted = ValueNotifier(true);
-  final entities = ListValueNotifier(<KdbxEntryWrapper>[]);
+  final entries = ListValueNotifier(<KdbxEntryWrapper>[]);
 
   KdbxFileWrapper(this.path, {bool externalStore = false}) {
     this.externalStore.value = externalStore;
@@ -18,21 +18,22 @@ class KdbxFileWrapper {
 
 class KdbxEntryWrapper {
   final title = ValueNotifier<StringValue?>(null);
-  final note = ValueNotifier<StringValue?>(null);
-  final url = ValueNotifier<StringValue?>(null);
-  final username = ValueNotifier<StringValue?>(null);
-  final psw = ValueNotifier<StringValue?>(null);
+  // final note = ValueNotifier<StringValue?>(null);
+  // final url = ValueNotifier<StringValue?>(null);
+  // final username = ValueNotifier<StringValue?>(null);
+  // final psw = ValueNotifier<StringValue?>(null);
   final KdbxEntry entry;
+  final modified = ValueNotifier(false);
 
   KdbxEntryWrapper({required this.entry}) {
     for (final se in entry.stringEntries) {
       print(
           'restparse entry string: ${se.key.key}  = ${se.value?.getText()}  ');
       title.value = entry.getString(KdbxKey('Title'));
-      note.value = entry.getString(KdbxKey('Notes'));
-      url.value = entry.getString(KdbxKey('URL'));
-      username.value = entry.getString(KdbxKey('UserName'));
-      psw.value = entry.getString(KdbxKey('Password'));
+      // note.value = entry.getString(KdbxKey('Notes'));
+      // url.value = entry.getString(KdbxKey('URL'));
+      // username.value = entry.getString(KdbxKey('UserName'));
+      // psw.value = entry.getString(KdbxKey('Password'));
     }
   }
 }
