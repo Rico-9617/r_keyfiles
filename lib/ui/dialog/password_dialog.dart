@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/styles.dart';
@@ -12,51 +13,39 @@ class PasswordDialog extends StatefulWidget {
   final Future<bool> Function(String password) onConfirm;
   final String? title;
   final bool requireConfirm;
+  final bool useGenerator;
 
   const PasswordDialog(
       {super.key,
       required this.onConfirm,
       this.title,
-      this.requireConfirm = false});
+      this.requireConfirm = false,
+      this.useGenerator = false});
 
   @override
   State<PasswordDialog> createState() => _PasswordDialogState();
 
   show(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (_, __, ___) => this,
-        transitionsBuilder: (_, animation, __, child) {
-          return Stack(
-            children: [
-              FadeTransition(
-                opacity: animation,
-                child: Container(
-                  color: Colors.black54, // Translucent background
-                ),
-              ),
-              SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: const Offset(0, 0),
-                ).animate(animation),
-                child: child,
-              ),
-            ],
-          );
-        },
-      ),
-    );
+    showModalBottomSheet(
+        context: context, builder: (_) => this, isScrollControlled: true);
   }
 }
 
 class _PasswordDialogState extends State<PasswordDialog> {
-  final textNotifier = ValueNotifier('');
-  final textEncryptNotifier = ValueNotifier(true);
-  final keyboardIndex = ValueNotifier(0);
-  final letterUpperCase = ValueNotifier(0);
+  final _textNotifier = ValueNotifier('');
+  final _textEncryptNotifier = ValueNotifier(true);
+  final _keyboardIndex = ValueNotifier(0);
+  final _letterUpperCase = ValueNotifier(0);
+  late TextEditingController _generateLengthEditController;
+  late ValueNotifier<int> _generateScope;
+  late ValueNotifier<bool> _generateAvailable;
+
   bool _loading = false;
+
+  final int _lower_case_letter = 0x1;
+  final int _upper_case_letter = 0x2;
+  final int _number = 0x4;
+  final int _symbol = 0x8;
 
   @override
   void initState() {
@@ -64,124 +53,209 @@ class _PasswordDialogState extends State<PasswordDialog> {
       await FlutterWindowManagerPlus.addFlags(
           FlutterWindowManagerPlus.FLAG_SECURE);
     });
+    if (widget.useGenerator) {
+      _generateLengthEditController = TextEditingController(text: '6');
+      _generateScope = ValueNotifier(0);
+      _generateAvailable = ValueNotifier(false);
+      _generateLengthEditController.addListener(() {
+        _generateAvailable.value =
+            _generateLengthEditController.text.isNotEmpty;
+      });
+    }
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Dialog.fullscreen(
-      backgroundColor: Colors.transparent,
-      child: Column(
-        children: [
-          Expanded(
-              child: GestureDetector(
-            onTap: Navigator.of(context).pop,
-          )),
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 12,
-                ),
-                Text(
-                  widget.title ?? '请输入密码',
-                  style: AppTextStyle.textPrimary,
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                _buildTextArea(textNotifier, textEncryptNotifier),
-                const SizedBox(
-                  height: 12,
-                ),
-                ValueListenableBuilder(
-                    valueListenable: keyboardIndex,
-                    builder: (_, index, __) => Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildTab(keyboardIndex, index, '字母,数字', 0),
-                                _buildTab(keyboardIndex, index, '符号', 1),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            SizedBox(
-                              height: 250,
-                              child: switch (index) {
-                                0 => _buildLetterKeyboard(
-                                    letterUpperCase, textNotifier),
-                                1 => _buildSymbolKeyboard(textNotifier),
-                                _ => const SizedBox.shrink()
-                              },
-                            ),
-                          ],
-                        )),
-                const SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    OutlinedButton(
-                        onPressed: Navigator.of(context).pop,
-                        child: const Text('关闭')),
-                    OutlinedButton(
-                        onPressed: () async {
-                          if (_loading) return;
-                          _loading = true;
-                          callback() async {
-                            if (await widget.onConfirm
-                                    .call(textNotifier.value) &&
-                                mounted) {
-                              Navigator.of(context).pop();
-                            }
-                            _loading = false;
-                          }
+  void dispose() {
+    if (widget.useGenerator) {
+      _generateScope.dispose();
+    }
+    super.dispose();
+  }
 
-                          if (widget.requireConfirm) {
-                            showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                      title: const Text('确认使用该密码？'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('取消'),
-                                          onPressed: () {
-                                            _loading = false;
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        TextButton(
-                                          child: const Text('确定'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                            callback();
-                                          },
-                                        ),
-                                      ],
-                                    ));
-                          } else {
-                            await callback();
-                          }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            height: 12,
+          ),
+          Text(
+            widget.title ?? '请输入密码',
+            style: AppTextStyle.textPrimary,
+          ),
+          const SizedBox(
+            height: 12,
+          ),
+          _buildTextArea(_textNotifier, _textEncryptNotifier),
+          const SizedBox(
+            height: 12,
+          ),
+          ValueListenableBuilder(
+              valueListenable: _keyboardIndex,
+              builder: (_, index, __) => Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildTab(_keyboardIndex, index, '字母,数字', 0),
+                          _buildTab(_keyboardIndex, index, '符号', 1),
+                          if (widget.useGenerator)
+                            _buildTab(_keyboardIndex, index, '生成器', 2),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      SizedBox(
+                        height: 250,
+                        child: switch (index) {
+                          0 => _buildLetterKeyboard(
+                              _letterUpperCase, _textNotifier),
+                          1 => _buildSymbolKeyboard(_textNotifier),
+                          2 => Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TextField(
+                                    controller: _generateLengthEditController,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      contentPadding: EdgeInsets.zero,
+                                      prefix: Text(
+                                        '位数:',
+                                        style: AppTextStyle.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 16,
+                                  ),
+                                  ValueListenableBuilder(
+                                    builder: (_, scope, __) {
+                                      return Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          _buildGeneratorScopeSelector('小写字母',
+                                              _lower_case_letter, scope),
+                                          _buildGeneratorScopeSelector('大写字母',
+                                              _upper_case_letter, scope),
+                                          _buildGeneratorScopeSelector(
+                                              '数字', _number, scope),
+                                          _buildGeneratorScopeSelector(
+                                              '符号', _symbol, scope),
+                                        ],
+                                      );
+                                    },
+                                    valueListenable: _generateScope,
+                                  ),
+                                  const SizedBox(
+                                    height: 16,
+                                  ),
+                                  Center(
+                                      child: ValueListenableBuilder(
+                                    builder: (context, enabled, _) {
+                                      return ElevatedButton(
+                                          onPressed: enabled ? () {} : null,
+                                          child: const Text('生成'));
+                                    },
+                                    valueListenable: _generateAvailable,
+                                  )),
+                                ],
+                              ),
+                            ),
+                          _ => const SizedBox.shrink()
                         },
-                        child: const Text('确定')),
-                  ],
-                ),
-                SizedBox(
-                  height: 12 + MediaQuery.of(context).padding.bottom,
-                ),
-              ],
-            ),
-          )
+                      ),
+                    ],
+                  )),
+          const SizedBox(
+            height: 20,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              OutlinedButton(
+                  onPressed: Navigator.of(context).pop,
+                  child: const Text('关闭')),
+              OutlinedButton(
+                  onPressed: () async {
+                    if (_loading) return;
+                    _loading = true;
+                    callback() async {
+                      if (await widget.onConfirm.call(_textNotifier.value) &&
+                          mounted) {
+                        Navigator.of(context).pop();
+                      }
+                      _loading = false;
+                    }
+
+                    if (widget.requireConfirm) {
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                title: const Text('确认使用该密码？'),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('取消'),
+                                    onPressed: () {
+                                      _loading = false;
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: const Text('确定'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      callback();
+                                    },
+                                  ),
+                                ],
+                              ));
+                    } else {
+                      await callback();
+                    }
+                  },
+                  child: const Text('确定')),
+            ],
+          ),
+          SizedBox(
+            height: 12 + MediaQuery.of(context).padding.bottom,
+          ),
         ],
       ),
+    );
+  }
+
+  TextButton _buildGeneratorScopeSelector(String text, int value, int scope) {
+    return TextButton(
+      onPressed: () {
+        if (scope & value == 0) {
+          _generateScope.value |= value;
+        } else {
+          _generateScope.value &= ~value;
+        }
+      },
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 12,
+              color: scope & value == 0
+                  ? AppColors.textDisable
+                  : AppColors.text0)),
     );
   }
 

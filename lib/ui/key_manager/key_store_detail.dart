@@ -10,7 +10,9 @@ import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
+import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
+import 'package:r_backup_tool/widgets/dialogs.dart';
 import 'package:r_backup_tool/widgets/transparent_page_route.dart';
 
 import 'entry_detail.dart';
@@ -194,29 +196,26 @@ class KeyStoreDetail extends StatelessWidget {
                       },
                       child: OutlinedButton(
                           onPressed: () {
-                            showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                      title: const Text('是否删除该文件?'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('取消'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        TextButton(
-                                          child: const Text('确定'),
-                                          onPressed: () async {
-                                            Navigator.of(context).pop();
-                                            EasyLoading.show();
-                                            await detailController
-                                                .deleteKeyStore(keyFile);
-                                            EasyLoading.dismiss();
-                                          },
-                                        ),
-                                      ],
-                                    ));
+                            showCenterDialog(context,
+                                builder: (_, __, ___) =>
+                                    TipsDialog(tips: '是否删除该文件?', actions: [
+                                      TextButton(
+                                        child: const Text('取消'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: const Text('确定'),
+                                        onPressed: () async {
+                                          Navigator.of(context).pop();
+                                          EasyLoading.show();
+                                          await detailController
+                                              .deleteKeyStore(keyFile);
+                                          EasyLoading.dismiss();
+                                        },
+                                      ),
+                                    ]));
                           },
                           child: const Text('删除')),
                     ),
@@ -313,8 +312,8 @@ class KeyStoreDetail extends StatelessWidget {
                                   AppColors.detailBackground,
                                   AppColors.detailBackground.withAlpha(0)
                                 ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
                               ),
                             ),
                           ),

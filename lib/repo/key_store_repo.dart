@@ -129,8 +129,8 @@ class KeyStoreRepo {
   }
 
   Future<Directory> getInternalFolder() async {
-    final folder =
-        Directory(p.join((await getTemporaryDirectory()).path, 'kf'));
+    final folder = Directory(
+        p.join((await getApplicationDocumentsDirectory()).path, '.kf'));
     if (!await folder.exists()) {
       await folder.create();
     }

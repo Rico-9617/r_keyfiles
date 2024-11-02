@@ -11,30 +11,34 @@ class KeyEntryDetailController {
   ProtectedValue? curPsw;
 
   KeyEntryDetailController(KdbxEntryWrapper entry) {
-    final originUserName =
+    userNameEditController.text =
         entry.entry.getString(KdbxKey('UserName'))?.getText() ?? '';
-    userNameEditController.text = originUserName;
     userNameEditController.addListener(() {
-      if (userNameEditController.text != originUserName) {
+      if (userNameEditController.text !=
+          entry.entry.getString(KdbxKey('UserName'))?.getText()) {
         entry.modified.value = true;
       }
     });
-    final originUrl = entry.entry.getString(KdbxKey('URL'))?.getText() ?? '';
-    urlEditController.text = originUserName;
+    urlEditController.text =
+        entry.entry.getString(KdbxKey('URL'))?.getText() ?? '';
     urlEditController.addListener(() {
-      if (urlEditController.text != originUrl) {
+      if (urlEditController.text !=
+          entry.entry.getString(KdbxKey('URL'))?.getText()) {
         entry.modified.value = true;
       }
     });
-    final originNote = entry.entry.getString(KdbxKey('URL'))?.getText() ?? '';
-    noteEditController.text = originUserName;
+    noteEditController.text =
+        entry.entry.getString(KdbxKey('Notes'))?.getText() ?? '';
     noteEditController.addListener(() {
-      if (noteEditController.text != originNote) {
+      if (noteEditController.text !=
+          entry.entry.getString(KdbxKey('Notes'))?.getText()) {
         entry.modified.value = true;
       }
     });
     final originPsw = entry.entry.getString(KdbxKey('Password'));
-    pswEditController.text = originPsw?.getText()?.replaceAll(r'.', '*') ?? '';
+    curPsw = originPsw as ProtectedValue?;
+    pswEditController.text =
+        originPsw?.getText().replaceAll(RegExp(r'.'), '*') ?? '';
   }
 
   dispose() {
@@ -43,6 +47,13 @@ class KeyEntryDetailController {
     urlEditController.dispose();
     noteEditController.dispose();
     pswEditController.dispose();
+  }
+
+  switchPswDisplay(bool encrypt) {
+    pswEditController.text = (encrypt
+            ? curPsw?.getText().replaceAll(RegExp(r'.'), '*')
+            : curPsw?.getText()) ??
+        '';
   }
 
   Future<String?> saveChanges(
@@ -82,6 +93,7 @@ class KeyEntryDetailController {
     userNameEditController.text =
         entry.entry.getString(KdbxKey('UserName'))?.getText() ?? '';
     curPsw = entry.entry.getString(KdbxKey('Password')) as ProtectedValue?;
+    pswEditController.text = curPsw?.getText().replaceAll(r'.', '*') ?? '';
     entry.modified.value = false;
   }
 
