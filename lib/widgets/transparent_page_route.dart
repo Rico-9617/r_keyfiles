@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 PageRouteBuilder buildTransparentPageRoute(Widget widget,
-        {bool barrierDismissible = true}) =>
+        {bool barrierDismissible = false}) =>
     PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => widget,
       opaque: false,

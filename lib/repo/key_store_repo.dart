@@ -54,10 +54,8 @@ class KeyStoreRepo {
         print('restparse body.rootGroup: ${kdbx.body.rootGroup}');
         fileWrapper.kdbxFile = kdbx;
         fileWrapper.title.value = kdbx.body.rootGroup.name.get() ?? 'Unnamed';
-
-        fileWrapper.entries.value = kdbx.body.rootGroup.entries
-            .map((e) => KdbxEntryWrapper(entry: e))
-            .toList();
+        fileWrapper.rootGroup =
+            KdbxGroupWrapper(group: kdbx.body.rootGroup, removable: false);
         fileWrapper.encrypted.value = false;
         streamController.add(true);
       } on KdbxInvalidKeyException {

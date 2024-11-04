@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:path/path.dart' as p;
-import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_store_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
@@ -11,11 +10,9 @@ import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
+import 'package:r_backup_tool/ui/key_manager/group_detail.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
-import 'package:r_backup_tool/widgets/transparent_page_route.dart';
-
-import 'entry_detail.dart';
 
 class KeyStoreDetail extends StatelessWidget {
   final KdbxFileWrapper keyFile;
@@ -28,7 +25,6 @@ class KeyStoreDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    logger.d('build key detail ${detailController.hashCode}');
     return ValueListenableBuilder(
         valueListenable: keyFile.encrypted,
         builder: (_, encrypted, __) => encrypted
@@ -71,7 +67,7 @@ class KeyStoreDetail extends StatelessWidget {
                           builder: (_, hasStoragePermission, __) {
                             return Wrap(spacing: 8, runSpacing: 4, children: [
                               if (isExternal && !hasStoragePermission)
-                                OutlinedButton(
+                                TextButton(
                                     onPressed: () {
                                       PasswordDialog(
                                         onConfirm: (p) async {
@@ -91,7 +87,7 @@ class KeyStoreDetail extends StatelessWidget {
                                     },
                                     child: const Text('导入以编辑')),
                               if (isExternal && !hasStoragePermission)
-                                OutlinedButton(
+                                TextButton(
                                     onPressed: () async {
                                       final result =
                                           await requestStoragePermission();
@@ -101,11 +97,11 @@ class KeyStoreDetail extends StatelessWidget {
                                     },
                                     child: const Text('授权以编辑')),
                               if (!isExternal || hasStoragePermission)
-                                OutlinedButton(
+                                TextButton(
                                     onPressed: () {
-                                      TextInputDialog.show(
-                                          context,
-                                          (_) => TextInputDialog(
+                                      showCenterDialog(context,
+                                          builder: (_, __, ___) =>
+                                              TextInputDialog(
                                                 onConfirm: (text) async {
                                                   if (text.isEmpty) {
                                                     EasyLoading.showToast(
@@ -132,7 +128,7 @@ class KeyStoreDetail extends StatelessWidget {
                                     },
                                     child: const Text('修改名称')),
                               if (!isExternal || hasStoragePermission)
-                                OutlinedButton(
+                                TextButton(
                                     onPressed: () {
                                       PasswordDialog(
                                         requireConfirm: true,
@@ -154,7 +150,7 @@ class KeyStoreDetail extends StatelessWidget {
                                     },
                                     child: const Text('修改密码')),
                               if (!isExternal)
-                                OutlinedButton(
+                                TextButton(
                                     onPressed: () async {
                                       if (!hasStoragePermission) {
                                         final result =
@@ -186,15 +182,14 @@ class KeyStoreDetail extends StatelessWidget {
                                     child: const Text('导出')),
                               child!,
                               if (!isExternal || hasStoragePermission)
-                                OutlinedButton(
-                                    onPressed: () {},
-                                    child: const Text('添加密钥')),
+                                TextButton(
+                                    onPressed: () {}, child: const Text('添加组')),
                             ]);
                           },
                           valueListenable: hasExternalStoragePermission,
                         );
                       },
-                      child: OutlinedButton(
+                      child: TextButton(
                           onPressed: () {
                             showCenterDialog(context,
                                 builder: (_, __, ___) =>
@@ -220,106 +215,19 @@ class KeyStoreDetail extends StatelessWidget {
                           child: const Text('删除')),
                     ),
                   ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        ValueListenableBuilder(
-                            valueListenable: keyFile.entries,
-                            builder: (_, entities, __) {
-                              return ListView.builder(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                itemCount: entities.length,
-                                itemBuilder: (context, index) {
-                                  final item = entities[index];
-                                  final heroTag = 'key_title_$index';
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                          buildTransparentPageRoute(
-                                              EntryDetail(
-                                                  keyFile: keyFile,
-                                                  entry: item,
-                                                  heroTag: heroTag),
-                                              barrierDismissible: false));
-                                    },
-                                    child: Hero(
-                                      tag: heroTag,
-                                      child: Container(
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 4),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        height: 50,
-                                        alignment: Alignment.centerLeft,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.entryBackground,
-                                          boxShadow: [
-                                            BoxShadow(
-                                                color: Colors.black12,
-                                                offset: Offset(0.0, 1.0),
-                                                spreadRadius: 1,
-                                                blurRadius: 2)
-                                          ],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            ValueListenableBuilder(
-                                                valueListenable: item.title,
-                                                builder: (_, title, __) {
-                                                  return Text(
-                                                    title?.getText() ??
-                                                        'unnamed',
-                                                    style: AppTextStyle
-                                                        .textEntityTitle,
-                                                  );
-                                                }),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }),
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 20, // Adjust height as needed
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.detailBackground,
-                                  AppColors.detailBackground.withAlpha(0)
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+                  ValueListenableBuilder(
+                    builder: (context, encrypted, __) {
+                      return !encrypted
+                          ? const SizedBox()
+                          : Expanded(
+                              child: GroupDetail(
+                                group: keyFile.rootGroup!,
+                                keyFile: keyFile,
+                                individual: false,
                               ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 20, // Adjust height as needed
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.detailBackground,
-                                  AppColors.detailBackground.withAlpha(0)
-                                ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                            );
+                    },
+                    valueListenable: keyFile.encrypted,
                   )
                 ],
               ));

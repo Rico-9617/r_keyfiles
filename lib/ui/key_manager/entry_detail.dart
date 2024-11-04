@@ -140,9 +140,8 @@ class _EntryDetailState extends State<EntryDetail> {
                           child: const Text('修改名称'),
                           onPressed: () {
                             hideKeyboard(context);
-                            TextInputDialog.show(
-                                context,
-                                (_) => TextInputDialog(
+                            showCenterDialog(context,
+                                builder: (_, __, ___) => TextInputDialog(
                                       onConfirm: (text) async {
                                         EasyLoading.show();
                                         final result = entryDetailController
