@@ -61,7 +61,7 @@ class _EntryDetailState extends State<EntryDetail> {
       hideKeyboard(context);
       if (widget.entry.modified.value) {
         showCenterDialog(context,
-            builder: (context, __, ___) => TipsDialog(
+            builder: (_, __, ___) => TipsDialog(
                   tips: '内容有变更，是否保存?',
                   actions: [
                     TextButton(
@@ -270,6 +270,8 @@ class _EntryDetailState extends State<EntryDetail> {
                                   hideKeyboard(context);
                                   PasswordDialog(
                                     onConfirm: (p) async {
+                                      entryDetailController.modifyPsw(
+                                          p, widget.entry);
                                       return true;
                                     },
                                     title: '设置新密码',

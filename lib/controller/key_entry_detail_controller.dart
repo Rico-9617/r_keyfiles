@@ -11,24 +11,21 @@ class KeyEntryDetailController {
   ProtectedValue? curPsw;
 
   KeyEntryDetailController(KdbxEntryWrapper entry) {
-    userNameEditController.text =
-        entry.entry.getString(KdbxKey('UserName'))?.getText() ?? '';
+    setDisplayUserName(entry);
     userNameEditController.addListener(() {
       if (userNameEditController.text !=
           entry.entry.getString(KdbxKey('UserName'))?.getText()) {
         entry.modified.value = true;
       }
     });
-    urlEditController.text =
-        entry.entry.getString(KdbxKey('URL'))?.getText() ?? '';
+    setDisplayURL(entry);
     urlEditController.addListener(() {
       if (urlEditController.text !=
           entry.entry.getString(KdbxKey('URL'))?.getText()) {
         entry.modified.value = true;
       }
     });
-    noteEditController.text =
-        entry.entry.getString(KdbxKey('Notes'))?.getText() ?? '';
+    setDisplayNotes(entry);
     noteEditController.addListener(() {
       if (noteEditController.text !=
           entry.entry.getString(KdbxKey('Notes'))?.getText()) {
@@ -86,22 +83,39 @@ class KeyEntryDetailController {
 
   recover(KdbxEntryWrapper entry) {
     entry.title.value = entry.entry.getString(KdbxKey('Title'));
+    setDisplayNotes(entry);
+    setDisplayURL(entry);
+    setDisplayUserName(entry);
+    curPsw = entry.entry.getString(KdbxKey('Password')) as ProtectedValue?;
+    setDisplayPsw();
+    entry.modified.value = false;
+  }
+
+  void setDisplayNotes(KdbxEntryWrapper entry) {
     noteEditController.text =
         entry.entry.getString(KdbxKey('Notes'))?.getText() ?? '';
+  }
+
+  void setDisplayURL(KdbxEntryWrapper entry) {
     urlEditController.text =
         entry.entry.getString(KdbxKey('URL'))?.getText() ?? '';
+  }
+
+  void setDisplayUserName(KdbxEntryWrapper entry) {
     userNameEditController.text =
         entry.entry.getString(KdbxKey('UserName'))?.getText() ?? '';
-    curPsw = entry.entry.getString(KdbxKey('Password')) as ProtectedValue?;
-    pswEditController.text = curPsw?.getText().replaceAll(r'.', '*') ?? '';
-    entry.modified.value = false;
   }
 
   modifyPsw(String psw, KdbxEntryWrapper entry) {
     curPsw = ProtectedValue.fromString(psw);
     if (curPsw != entry.entry.getString(KdbxKey('Password'))) {
       entry.modified.value = true;
+      setDisplayPsw();
     }
+  }
+
+  void setDisplayPsw() {
+    pswEditController.text = curPsw?.getText().replaceAll(r'.', '*') ?? '';
   }
 
   String? modifyEntryName(String name, KdbxEntryWrapper entry) {

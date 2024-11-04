@@ -1,8 +1,11 @@
+import 'dart:core';
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:r_backup_tool/colors.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:vibration/vibration.dart';
 
@@ -36,9 +39,9 @@ class _PasswordDialogState extends State<PasswordDialog> {
   final _textEncryptNotifier = ValueNotifier(true);
   final _keyboardIndex = ValueNotifier(0);
   final _letterUpperCase = ValueNotifier(0);
-  late TextEditingController _generateLengthEditController;
   late ValueNotifier<int> _generateScope;
   late ValueNotifier<bool> _generateAvailable;
+  late ValueNotifier<int> _generateLength;
 
   bool _loading = false;
 
@@ -54,22 +57,18 @@ class _PasswordDialogState extends State<PasswordDialog> {
           FlutterWindowManagerPlus.FLAG_SECURE);
     });
     if (widget.useGenerator) {
-      _generateLengthEditController = TextEditingController(text: '6');
       _generateScope = ValueNotifier(0);
-      _generateAvailable = ValueNotifier(false);
-      _generateLengthEditController.addListener(() {
-        _generateAvailable.value =
-            _generateLengthEditController.text.isNotEmpty;
-      });
+      _generateLength = ValueNotifier(6);
+      _generateScope.value |= _lower_case_letter;
+      _generateScope.value |= _upper_case_letter;
+      _generateScope.value |= _number;
+      _generateAvailable = ValueNotifier(true);
     }
     super.initState();
   }
 
   @override
   void dispose() {
-    if (widget.useGenerator) {
-      _generateScope.dispose();
-    }
     super.dispose();
   }
 
@@ -127,22 +126,34 @@ class _PasswordDialogState extends State<PasswordDialog> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  TextField(
-                                    controller: _generateLengthEditController,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      contentPadding: EdgeInsets.zero,
-                                      prefix: Text(
-                                        '位数:',
-                                        style: AppTextStyle.textPrimary,
-                                      ),
-                                    ),
+                                  ValueListenableBuilder(
+                                    builder: (context, length, _) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '位数: $length',
+                                            style: AppTextStyle.textPrimary,
+                                          ),
+                                          Slider(
+                                            value: length.toDouble(),
+                                            min: 1,
+                                            max: 64,
+                                            divisions: 63,
+                                            label: length.toString(),
+                                            onChanged: (double value) {
+                                              _generateLength.value =
+                                                  value.toInt();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    valueListenable: _generateLength,
                                   ),
                                   const SizedBox(
-                                    height: 16,
+                                    height: 12,
                                   ),
                                   ValueListenableBuilder(
                                     builder: (_, scope, __) {
@@ -170,7 +181,14 @@ class _PasswordDialogState extends State<PasswordDialog> {
                                       child: ValueListenableBuilder(
                                     builder: (context, enabled, _) {
                                       return ElevatedButton(
-                                          onPressed: enabled ? () {} : null,
+                                          onPressed: enabled
+                                              ? () {
+                                                  _textNotifier.value =
+                                                      generate(
+                                                          _generateLength.value,
+                                                          _generateScope.value);
+                                                }
+                                              : null,
                                           child: const Text('生成'));
                                     },
                                     valueListenable: _generateAvailable,
@@ -249,6 +267,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
         } else {
           _generateScope.value &= ~value;
         }
+        _generateAvailable.value = _generateScope.value != 0;
       },
       child: Text(text,
           style: TextStyle(
@@ -419,14 +438,49 @@ class _PasswordDialogState extends State<PasswordDialog> {
       ],
     );
   }
-}
 
-vibrate() async {
-  if (await Vibration.hasCustomVibrationsSupport() == true) {
-    Vibration.vibrate(duration: 70);
-  } else {
-    Vibration.vibrate();
-    await Future.delayed(const Duration(milliseconds: 70));
-    Vibration.cancel();
+  vibrate() async {
+    if (await Vibration.hasCustomVibrationsSupport() == true) {
+      Vibration.vibrate(duration: 70);
+    } else {
+      Vibration.vibrate();
+      await Future.delayed(const Duration(milliseconds: 70));
+      Vibration.cancel();
+    }
+  }
+
+  String generate(int length, int scope) {
+    final source = <List<String>>[];
+    List<int> scopeIndexes = [];
+    int scopeIndex = 0;
+    if (scope & _lower_case_letter == _lower_case_letter) {
+      source.add(List.generate(26, (i) => String.fromCharCode(i + 97)));
+      scopeIndexes.add(scopeIndex++);
+    }
+    if (scope & _upper_case_letter == _upper_case_letter) {
+      source.add(List.generate(26, (i) => String.fromCharCode(i + 65)));
+      scopeIndexes.add(scopeIndex++);
+    }
+    if (scope & _number == _number) {
+      source.add(List.generate(10, (i) => i.toString()));
+      scopeIndexes.add(scopeIndex++);
+    }
+    if (scope & _symbol == _symbol) {
+      source.add(PasswordDialog._keyboardSymbolData.split(''));
+      scopeIndexes.add(scopeIndex++);
+    }
+    logger.d('generate $scopeIndex');
+    while (scopeIndexes.length < length) {
+      scopeIndexes.add(Random().nextInt(scopeIndex));
+    }
+    scopeIndexes.shuffle(Random());
+    logger.d('generate $scopeIndexes');
+    final result = StringBuffer();
+    while (result.length < length) {
+      final src = source[scopeIndexes[result.length]];
+      result.write(src[Random().nextInt(src.length)]);
+    }
+    logger.d('generate $result');
+    return result.toString();
   }
 }
