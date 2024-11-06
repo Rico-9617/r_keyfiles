@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_entry_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
@@ -43,51 +42,51 @@ class _EntryDetailState extends State<EntryDetail> {
     super.dispose();
   }
 
+  Future<bool> save() async {
+    LoadingDialog.show();
+    final result =
+        await entryDetailController.saveChanges(widget.keyFile, widget.entry);
+    LoadingDialog.dismiss();
+    if (result != null && result.isNotEmpty) {
+      Toast.show(result);
+    }
+
+    return result == null;
+  }
+
+  onClickBack() {
+    hideKeyboard(context);
+    if (widget.entry.modified.value) {
+      showCenterDialog(context,
+          builder: (_, __, ___) => TipsDialog(
+                tips: '内容有变更，是否保存?',
+                actions: [
+                  TextButton(
+                    child: const Text('忽略'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      entryDetailController.recover(widget.entry);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: const Text('保存'),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      if (await save() && mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ],
+              ));
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    Future<bool> save() async {
-      EasyLoading.show();
-      final result =
-          await entryDetailController.saveChanges(widget.keyFile, widget.entry);
-      if (result != null && result.isNotEmpty) {
-        EasyLoading.showToast(result);
-      } else {
-        EasyLoading.dismiss();
-      }
-      return result == null;
-    }
-
-    onClickBack() {
-      hideKeyboard(context);
-      if (widget.entry.modified.value) {
-        showCenterDialog(context,
-            builder: (_, __, ___) => TipsDialog(
-                  tips: '内容有变更，是否保存?',
-                  actions: [
-                    TextButton(
-                      child: const Text('忽略'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        entryDetailController.recover(widget.entry);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    TextButton(
-                      child: const Text('保存'),
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        if (await save() && mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                    ),
-                  ],
-                ));
-      } else {
-        Navigator.of(context).pop();
-      }
-    }
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -143,15 +142,14 @@ class _EntryDetailState extends State<EntryDetail> {
                             showCenterDialog(context,
                                 builder: (_, __, ___) => TextInputDialog(
                                       onConfirm: (text) async {
-                                        EasyLoading.show();
+                                        LoadingDialog.show();
                                         final result = entryDetailController
                                             .modifyEntryName(
                                                 text, widget.entry);
+                                        LoadingDialog.dismiss();
                                         if (result != null &&
                                             result.isNotEmpty) {
-                                          EasyLoading.showToast(result);
-                                        } else {
-                                          EasyLoading.dismiss();
+                                          Toast.show(result);
                                         }
                                         return result == null;
                                       },
@@ -181,16 +179,16 @@ class _EntryDetailState extends State<EntryDetail> {
                                         child: const Text('确定'),
                                         onPressed: () async {
                                           Navigator.of(context).pop();
-                                          EasyLoading.show();
+                                          LoadingDialog.show();
                                           final result =
                                               await entryDetailController
                                                   .deleteEntry(widget.keyFile,
                                                       widget.entry);
+                                          LoadingDialog.dismiss();
                                           if (result != null &&
                                               result.isNotEmpty) {
-                                            EasyLoading.showToast(result);
+                                            Toast.show(result);
                                           } else {
-                                            EasyLoading.dismiss();
                                             if (mounted) {
                                               Navigator.of(context).pop();
                                             }
@@ -247,7 +245,7 @@ class _EntryDetailState extends State<EntryDetail> {
                                   Clipboard.setData(ClipboardData(
                                       text: entryDetailController
                                           .userNameEditController.text));
-                                  EasyLoading.showToast('已复制');
+                                  Toast.show('已复制');
                                 },
                                 child: const Text(
                                   '复制',
@@ -328,7 +326,7 @@ class _EntryDetailState extends State<EntryDetail> {
                                           text: entryDetailController.curPsw
                                                   ?.getText() ??
                                               ''));
-                                      EasyLoading.showToast('已复制，10秒内有效！');
+                                      Toast.show('已复制，10秒内有效！');
                                       await Future.delayed(
                                           const Duration(seconds: 10));
                                       Clipboard.setData(
@@ -365,7 +363,7 @@ class _EntryDetailState extends State<EntryDetail> {
                                   Clipboard.setData(ClipboardData(
                                       text: entryDetailController
                                           .urlEditController.text));
-                                  EasyLoading.showToast('已复制');
+                                  Toast.show('已复制');
                                 },
                                 child: const Text(
                                   '复制',
@@ -386,7 +384,7 @@ class _EntryDetailState extends State<EntryDetail> {
                                   Clipboard.setData(ClipboardData(
                                       text: entryDetailController
                                           .noteEditController.text));
-                                  EasyLoading.showToast('已复制');
+                                  Toast.show('已复制');
                                 },
                                 child: const SizedBox(
                                   width: 50,

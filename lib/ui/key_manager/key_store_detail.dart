@@ -1,14 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:path/path.dart' as p;
 import 'package:r_backup_tool/controller/key_store_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
-import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
 import 'package:r_backup_tool/ui/key_manager/group_detail.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
@@ -35,15 +33,14 @@ class KeyStoreDetail extends StatelessWidget {
                         onPressed: () {
                           PasswordDialog(
                             onConfirm: (p) async {
-                              EasyLoading.show();
+                              LoadingDialog.show();
                               final result = await detailController
                                   .decodeSavedFile(keyFile, p)
                                   .handleError((e) {
-                                EasyLoading.showToast(e.toString());
+                                Toast.show(e.toString());
                               }).single;
-                              if (result) {
-                                EasyLoading.dismiss();
-                              }
+
+                              LoadingDialog.dismiss();
                               return result;
                             },
                           ).show(context);
@@ -71,16 +68,15 @@ class KeyStoreDetail extends StatelessWidget {
                                     onPressed: () {
                                       PasswordDialog(
                                         onConfirm: (p) async {
-                                          EasyLoading.show();
+                                          LoadingDialog.show();
                                           final result = await detailController
                                               .importExternalKeyStore(
                                                   keyFile, p);
                                           if (result != null &&
                                               result.isNotEmpty) {
-                                            EasyLoading.showToast(result);
-                                          } else {
-                                            EasyLoading.dismiss();
+                                            Toast.show(result);
                                           }
+                                          LoadingDialog.dismiss();
                                           return result == null;
                                         },
                                       ).show(context);
@@ -92,41 +88,13 @@ class KeyStoreDetail extends StatelessWidget {
                                       final result =
                                           await requestStoragePermission();
                                       if (result == false) {
-                                        EasyLoading.showToast('授权失败，请前往系统设置授权');
+                                        Toast.show('授权失败，请前往系统设置授权');
                                       }
                                     },
-                                    child: const Text('授权以编辑')),
-                              if (!isExternal || hasStoragePermission)
-                                TextButton(
-                                    onPressed: () {
-                                      showCenterDialog(context,
-                                          builder: (_, __, ___) =>
-                                              TextInputDialog(
-                                                onConfirm: (text) async {
-                                                  if (text.isEmpty) {
-                                                    EasyLoading.showToast(
-                                                        '名称不能为空!');
-                                                    return false;
-                                                  }
-                                                  EasyLoading.show();
-                                                  final result =
-                                                      await detailController
-                                                          .modifyKeyStoreTitle(
-                                                              keyFile, text);
-                                                  if (result != null &&
-                                                      result.isNotEmpty) {
-                                                    EasyLoading.showToast(
-                                                        result);
-                                                  } else {
-                                                    EasyLoading.dismiss();
-                                                  }
-                                                  return result == null;
-                                                },
-                                                title: '设置新名称',
-                                                content: keyFile.title.value,
-                                              ));
-                                    },
-                                    child: const Text('修改名称')),
+                                    child: const Text(
+                                      '授权以编辑',
+                                      style: AppTextStyle.textButtonBlue,
+                                    )),
                               if (!isExternal || hasStoragePermission)
                                 TextButton(
                                     onPressed: () {
@@ -134,21 +102,23 @@ class KeyStoreDetail extends StatelessWidget {
                                         requireConfirm: true,
                                         title: '设置新密码',
                                         onConfirm: (p) async {
-                                          EasyLoading.show();
+                                          LoadingDialog.show();
                                           final result = await detailController
                                               .modifyKeyFilePassword(
                                                   keyFile, p);
                                           if (result != null &&
                                               result.isNotEmpty) {
-                                            EasyLoading.showToast(result);
-                                          } else {
-                                            EasyLoading.dismiss();
+                                            Toast.show(result);
                                           }
+                                          LoadingDialog.dismiss();
                                           return result == null;
                                         },
                                       ).show(context);
                                     },
-                                    child: const Text('修改密码')),
+                                    child: const Text(
+                                      '修改密码',
+                                      style: AppTextStyle.textButtonBlue,
+                                    )),
                               if (!isExternal)
                                 TextButton(
                                     onPressed: () async {
@@ -156,7 +126,7 @@ class KeyStoreDetail extends StatelessWidget {
                                         final result =
                                             await requestStoragePermission();
                                         if (result == false) {
-                                          EasyLoading.showToast(
+                                          Toast.show(
                                               '无外部存储权限，无法导出文件，请前往系统设置授权');
                                           return;
                                         }
@@ -179,11 +149,11 @@ class KeyStoreDetail extends StatelessWidget {
                                         logger.e(e);
                                       }
                                     },
-                                    child: const Text('导出')),
+                                    child: const Text(
+                                      '导出',
+                                      style: AppTextStyle.textButtonBlue,
+                                    )),
                               child!,
-                              if (!isExternal || hasStoragePermission)
-                                TextButton(
-                                    onPressed: () {}, child: const Text('添加组')),
                             ]);
                           },
                           valueListenable: hasExternalStoragePermission,
@@ -204,31 +174,27 @@ class KeyStoreDetail extends StatelessWidget {
                                         child: const Text('确定'),
                                         onPressed: () async {
                                           Navigator.of(context).pop();
-                                          EasyLoading.show();
+                                          LoadingDialog.show();
                                           await detailController
                                               .deleteKeyStore(keyFile);
-                                          EasyLoading.dismiss();
+                                          LoadingDialog.dismiss();
                                         },
                                       ),
                                     ]));
                           },
-                          child: const Text('删除')),
+                          child: const Text(
+                            '删除',
+                            style: AppTextStyle.textButtonBlue,
+                          )),
                     ),
                   ),
-                  ValueListenableBuilder(
-                    builder: (context, encrypted, __) {
-                      return !encrypted
-                          ? const SizedBox()
-                          : Expanded(
-                              child: GroupDetail(
-                                group: keyFile.rootGroup!,
-                                keyFile: keyFile,
-                                individual: false,
-                              ),
-                            );
-                    },
-                    valueListenable: keyFile.encrypted,
-                  )
+                  Expanded(
+                    child: GroupDetail(
+                      group: keyFile.rootGroup!,
+                      keyFile: keyFile,
+                      individual: false,
+                    ),
+                  ),
                 ],
               ));
   }

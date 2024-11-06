@@ -58,7 +58,6 @@ class _TextInputDialogState extends State<TextInputDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: TextField(
               controller: textEditController,
-              maxLines: 3,
             ),
           ),
           const SizedBox(

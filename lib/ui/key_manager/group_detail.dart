@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:r_backup_tool/colors.dart';
+import 'package:r_backup_tool/controller/key_group_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
+import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
 import 'package:r_backup_tool/widgets/scrollable_tab_bar.dart';
 import 'package:r_backup_tool/widgets/transparent_page_route.dart';
 
 import 'entry_detail.dart';
 
-class GroupDetail extends StatelessWidget {
+class GroupDetail extends StatefulWidget {
   final KdbxGroupWrapper group;
   final KdbxFileWrapper keyFile;
   final String animTag;
@@ -25,46 +26,61 @@ class GroupDetail extends StatelessWidget {
       this.individual = true});
 
   @override
+  State<GroupDetail> createState() => _GroupDetailState();
+}
+
+class _GroupDetailState extends State<GroupDetail> {
+  final groupController = KeyGroupDetailController();
+
+  @override
   Widget build(BuildContext context) {
-    final headHeight = MediaQuery.of(context).padding.top + 40;
+    final double headHeight =
+        widget.individual ? MediaQuery.of(context).padding.top + 40 : 40;
     final content = Stack(
       children: [
-        Positioned.fill(
-            child: Hero(
-          tag: animTag,
-          child: Container(
-            color: AppColors.detailBackground,
+        if (widget.individual)
+          Positioned.fill(
+              child: Hero(
+            tag: widget.animTag,
             child: Container(
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-              constraints: BoxConstraints(minHeight: headHeight),
-              child: Row(
-                children: [
-                  if (individual)
-                    IconButton(
-                        onPressed: () {
-                          // onClickBack();
-                        },
-                        icon: const Icon(Icons.close)),
-                  Expanded(
-                      child: ValueListenableBuilder(
-                          valueListenable: group.title,
-                          builder: (_, title, __) {
-                            return Text(
-                              title,
-                              style: AppTextStyle.textEntityTitle,
-                            );
-                          })),
-                ],
+              color: AppColors.detailBackground,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  padding: widget.individual
+                      ? EdgeInsets.only(top: MediaQuery.of(context).padding.top)
+                      : EdgeInsets.zero,
+                  constraints: BoxConstraints(minHeight: headHeight),
+                  child: Row(
+                    children: [
+                      if (widget.individual)
+                        IconButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            icon: const Icon(Icons.close)),
+                      Expanded(
+                          child: ValueListenableBuilder(
+                              valueListenable: widget.group.title,
+                              builder: (_, title, __) {
+                                return Text(
+                                  title,
+                                  style: AppTextStyle.textEntityTitle,
+                                );
+                              })),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        )),
+          )),
         Positioned.fill(
           child: Column(
             children: [
-              SizedBox(
-                height: headHeight,
-              ),
+              if (widget.individual)
+                SizedBox(
+                  height: headHeight,
+                ),
               ValueListenableBuilder(
                   valueListenable: hasExternalStoragePermission,
                   builder: (context, hasStoragePermission, __) {
@@ -72,15 +88,45 @@ class GroupDetail extends StatelessWidget {
                       builder: (context, external, __) {
                         return external && !hasStoragePermission
                             ? const SizedBox()
-                            : Padding(
+                            : Container(
+                                width: double.infinity,
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8.0),
                                 child:
                                     Wrap(spacing: 8, runSpacing: 4, children: [
                                   TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showCenterDialog(context,
+                                            builder: (_, __, ___) =>
+                                                TextInputDialog(
+                                                  onConfirm: (text) async {
+                                                    if (text.isEmpty) {
+                                                      Toast.show('名称不能为空!');
+                                                      return false;
+                                                    }
+                                                    LoadingDialog.show();
+                                                    final result =
+                                                        await groupController
+                                                            .modifyGroupTitle(
+                                                      text,
+                                                      widget.group,
+                                                      widget.keyFile,
+                                                    );
+                                                    if (result != null &&
+                                                        result.isNotEmpty) {
+                                                      Toast.show(result);
+                                                    }
+                                                    LoadingDialog.dismiss();
+
+                                                    return result == null;
+                                                  },
+                                                  title: '设置新名称',
+                                                  content:
+                                                      widget.group.title.value,
+                                                ));
+                                      },
                                       child: const Text(
-                                        '修改组名',
+                                        '修改名称',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
                                   TextButton(
@@ -90,93 +136,173 @@ class GroupDetail extends StatelessWidget {
                                                 TextInputDialog(
                                                   onConfirm: (text) async {
                                                     if (text.isEmpty) {
-                                                      EasyLoading.showToast(
-                                                          '名称不能为空!');
+                                                      Toast.show('名称不能为空!');
                                                       return false;
                                                     }
-                                                    EasyLoading.show();
-                                                    // final result =
-                                                    //     await detailController
-                                                    //         .modifyKeyStoreTitle(
-                                                    //             keyFile, text);
-                                                    // if (result != null &&
-                                                    //     result.isNotEmpty) {
-                                                    //   EasyLoading.showToast(
-                                                    //       result);
-                                                    // } else {
-                                                    //   EasyLoading.dismiss();
-                                                    // }
-                                                    // return result == null;
-                                                    return true;
+                                                    LoadingDialog.show();
+                                                    final result =
+                                                        await groupController
+                                                            .createGroup(
+                                                                text,
+                                                                widget.group,
+                                                                widget.keyFile);
+                                                    if (result != null &&
+                                                        result.isNotEmpty) {
+                                                      Toast.show(result);
+                                                    }
+                                                    LoadingDialog.dismiss();
+
+                                                    return result == null;
                                                   },
-                                                  title: '设置名称',
-                                                  content: keyFile.title.value,
+                                                  title: '新组名称',
                                                 ));
                                       },
                                       child: const Text(
-                                        '创建子组',
+                                        '添加子组',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
                                   TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showCenterDialog(context,
+                                            builder: (_, __, ___) =>
+                                                TextInputDialog(
+                                                  onConfirm: (text) async {
+                                                    if (text.isEmpty) {
+                                                      Toast.show('名称不能为空!');
+                                                      return false;
+                                                    }
+                                                    LoadingDialog.show();
+                                                    final result =
+                                                        await groupController
+                                                            .createEntry(
+                                                                text,
+                                                                widget.group,
+                                                                widget.keyFile);
+                                                    if (result != null &&
+                                                        result.isNotEmpty) {
+                                                      Toast.show(result);
+                                                    }
+                                                    LoadingDialog.dismiss();
+
+                                                    return result == null;
+                                                  },
+                                                  title: '新密钥名称',
+                                                ));
+                                      },
                                       child: const Text(
-                                        '创建密钥',
+                                        '添加密钥',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
-                                  if (group.removable)
+                                  if (!widget.group.rootGroup)
                                     TextButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          showCenterDialog(context,
+                                              builder: (_, __, ___) =>
+                                                  TipsDialog(
+                                                      tips: '是否删除该组?',
+                                                      actions: [
+                                                        TextButton(
+                                                          child:
+                                                              const Text('取消'),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                        ),
+                                                        TextButton(
+                                                          child:
+                                                              const Text('确定'),
+                                                          onPressed: () async {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                            LoadingDialog
+                                                                .show();
+                                                            final result =
+                                                                await groupController
+                                                                    .deleteGroup(
+                                                                        widget
+                                                                            .group,
+                                                                        widget
+                                                                            .keyFile);
+                                                            LoadingDialog
+                                                                .dismiss();
+                                                            if (result !=
+                                                                    null &&
+                                                                result
+                                                                    .isNotEmpty) {
+                                                              Toast.show(
+                                                                  result);
+                                                            } else {
+                                                              if (mounted) {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              }
+                                                            }
+                                                          },
+                                                        ),
+                                                      ]));
+                                        },
                                         child: const Text(
                                           '删除该组',
                                           style: AppTextStyle.textButtonBlue,
                                         )),
                                 ]));
                       },
-                      valueListenable: keyFile.externalStore,
+                      valueListenable: widget.keyFile.externalStore,
                     );
                   }),
               ValueListenableBuilder(
-                  valueListenable: group.groups,
+                  valueListenable: widget.group.groups,
                   builder: (_, subGroups, __) => subGroups.isEmpty
                       ? const SizedBox()
                       : Column(
                           children: [
-                            Divider(),
-                            ScrollableTabBar(
-                                children: subGroups.map((e) {
-                              final heroTag = 'group_${e.hashCode}';
-                              return Hero(
-                                tag: heroTag,
-                                child: OutlinedButton(
-                                    onPressed: () {
-                                      Navigator.of(context)
-                                          .push(buildTransparentPageRoute(
-                                        GroupDetail(
-                                            keyFile: keyFile,
-                                            group: e,
-                                            animTag: heroTag),
-                                      ));
-                                    },
-                                    child: ValueListenableBuilder(
-                                      builder: (_, title, __) {
-                                        return Text(
-                                          title,
-                                          style: AppTextStyle.textPrimary
-                                              .copyWith(fontSize: 12),
-                                        );
-                                      },
-                                      valueListenable: e.title,
-                                    )),
-                              );
-                            }).toList()),
-                            Divider(),
+                            const Divider(),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ScrollableTabBar(
+                                  children: subGroups.map((e) {
+                                final heroTag = 'group_${e.hashCode}';
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4.0),
+                                  child: Hero(
+                                    tag: heroTag,
+                                    child: OutlinedButton(
+                                        onPressed: () {
+                                          Navigator.of(context)
+                                              .push(buildTransparentPageRoute(
+                                            GroupDetail(
+                                                keyFile: widget.keyFile,
+                                                group: e,
+                                                animTag: heroTag),
+                                          ));
+                                        },
+                                        child: ValueListenableBuilder(
+                                          builder: (_, title, __) {
+                                            return Text(
+                                              title,
+                                              style: AppTextStyle.textPrimary
+                                                  .copyWith(fontSize: 12),
+                                            );
+                                          },
+                                          valueListenable: e.title,
+                                        )),
+                                  ),
+                                );
+                              }).toList()),
+                            ),
+                            const Divider(),
                           ],
                         )),
               Expanded(
                 child: Stack(
                   children: [
                     ValueListenableBuilder(
-                        valueListenable: group.entries,
+                        valueListenable: widget.group.entries,
                         builder: (_, entries, __) {
                           return ListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -189,7 +315,7 @@ class GroupDetail extends StatelessWidget {
                                   Navigator.of(context)
                                       .push(buildTransparentPageRoute(
                                     EntryDetail(
-                                        keyFile: keyFile,
+                                        keyFile: widget.keyFile,
                                         entry: item,
                                         heroTag: heroTag),
                                   ));
@@ -276,14 +402,6 @@ class GroupDetail extends StatelessWidget {
         ),
       ],
     );
-    return individual
-        ? PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, result) {
-              if (didPop) return;
-              // onClickBack();
-            },
-            child: content)
-        : content;
+    return content;
   }
 }

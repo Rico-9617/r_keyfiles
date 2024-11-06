@@ -21,17 +21,19 @@ class KdbxFileWrapper {
 
 class KdbxGroupWrapper {
   final title = ValueNotifier<String>('');
+  KdbxGroupWrapper? parent;
   final KdbxGroup group;
   final groups = ListValueNotifier(<KdbxGroupWrapper>[]);
-  final bool removable;
-  final modified = ValueNotifier(false);
+  final bool rootGroup;
 
   final entries = ListValueNotifier(<KdbxEntryWrapper>[]);
 
-  KdbxGroupWrapper({required this.group, this.removable = true}) {
+  KdbxGroupWrapper({required this.group, this.parent, this.rootGroup = false}) {
     logger.d('KdbxGroupWrapper ${group.name.get()}');
     title.value = group.name.get() ?? '';
-    groups.value = group.groups.map((e) => KdbxGroupWrapper(group: e)).toList();
+    groups.value = group.groups
+        .map((e) => KdbxGroupWrapper(group: e, parent: this))
+        .toList();
     entries.value =
         group.entries.map((e) => KdbxEntryWrapper(entry: e)).toList();
   }

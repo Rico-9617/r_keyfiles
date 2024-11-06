@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_file_controller.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
@@ -52,7 +52,9 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                     ClickableWidget(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        onTap: () async {},
+                        onTap: () async {
+                          LoadingDialog.show();
+                        },
                         child: const Text(
                           "新建",
                           style: AppTextStyle.textWhite,
@@ -69,20 +71,19 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                             if (!(await file.exists()) || !mounted) return;
                             PasswordDialog(
                               onConfirm: (p) async {
-                                EasyLoading.show();
+                                LoadingDialog.show();
                                 final result = await keyFileController
                                     .parseKdbxFile(file, p, externalFile: true)
                                     .handleError((e) {
-                                  EasyLoading.showToast(e.toString());
+                                  // EasyLoading.showToast(e.toString());
+                                  Toast.show(e.toString());
                                 }).single;
-                                if (result) {
-                                  EasyLoading.dismiss();
-                                }
+                                LoadingDialog.dismiss();
                                 return result;
                               },
                             ).show(context);
                           } else {
-                            EasyLoading.showToast('文件解析失败！');
+                            Toast.show('文件解析失败！');
                           }
                         },
                         child: const Text(
@@ -129,7 +130,8 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                                                                         16)
                                                             : const TextStyle(
                                                                 color: Colors
-                                                                    .black54),
+                                                                    .black54,
+                                                                fontSize: 12),
                                                       );
                                                     },
                                                     valueListenable: e.title,

@@ -55,7 +55,7 @@ class KeyStoreRepo {
         fileWrapper.kdbxFile = kdbx;
         fileWrapper.title.value = kdbx.body.rootGroup.name.get() ?? 'Unnamed';
         fileWrapper.rootGroup =
-            KdbxGroupWrapper(group: kdbx.body.rootGroup, removable: false);
+            KdbxGroupWrapper(group: kdbx.body.rootGroup, rootGroup: true);
         fileWrapper.encrypted.value = false;
         streamController.add(true);
       } on KdbxInvalidKeyException {
