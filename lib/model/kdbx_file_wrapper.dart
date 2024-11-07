@@ -11,7 +11,6 @@ class KdbxFileWrapper {
   KdbxFile? kdbxFile;
   final encrypted = ValueNotifier(true);
   KdbxGroupWrapper? rootGroup;
-  final groups = ListValueNotifier(<KdbxGroupWrapper>[]);
 
   KdbxFileWrapper(this.path, {bool externalStore = false}) {
     this.externalStore.value = externalStore;

@@ -46,12 +46,9 @@ class KeyStoreRepo {
     final streamController = StreamController<bool>();
     Future<void> decrypt() async {
       try {
-        print('restparse  : ${fileWrapper.title.value} ${fileWrapper.path}');
         final kdbx = await kdbxFormat.read(
             File(fileWrapper.path).readAsBytesSync(),
             Credentials(ProtectedValue.fromString(psw)));
-        print('restparse body.rootGroup: ${kdbx.body.rootGroup.name.get()}');
-        print('restparse body.rootGroup: ${kdbx.body.rootGroup}');
         fileWrapper.kdbxFile = kdbx;
         fileWrapper.title.value = kdbx.body.rootGroup.name.get() ?? 'Unnamed';
         fileWrapper.rootGroup =

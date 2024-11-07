@@ -9,8 +9,10 @@ import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
+import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/widgets/buttons.dart';
 import 'package:r_backup_tool/widgets/content_scaffold.dart';
+import 'package:r_backup_tool/widgets/dialogs.dart';
 import 'package:r_backup_tool/widgets/scrollable_tab_bar.dart';
 
 import 'key_store_detail.dart';
@@ -52,7 +54,25 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                     ClickableWidget(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        onTap: () async {},
+                        onTap: () async {
+                          showCenterDialog(context, builder: (_,__,___,____){
+                            return TextInputDialog(onConfirm: (text) async{
+                              PasswordDialog(
+                                onConfirm: (p) async {
+                                  LoadingDialog.show();
+                                  final result = await keyFileController
+                                      .createNewKeyFile(text, p);
+                                  LoadingDialog.dismiss();
+                                  if(result != null) {
+                                    Toast.show(result);
+                                  }
+                                  return result == null;
+                                },
+                              ).show(context);
+                              return true;
+                            });
+                          });
+                        },
                         child: const Text(
                           "新建",
                           style: AppTextStyle.textWhite,
@@ -63,7 +83,6 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         onTap: () async {
                           FilePickerResult? result =
                               await FilePicker.platform.pickFiles();
-
                           if (result != null) {
                             final file = File(result.files.single.path!);
                             if (!(await file.exists()) || !mounted) return;

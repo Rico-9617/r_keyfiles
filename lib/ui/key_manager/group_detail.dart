@@ -94,6 +94,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                     const EdgeInsets.symmetric(horizontal: 8.0),
                                 child:
                                     Wrap(spacing: 8, runSpacing: 4, children: [
+                                      if(!widget.group.recycleBin)
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
@@ -129,6 +130,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                         '修改名称',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
+                                      if(!widget.group.recycleBin)
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
@@ -161,6 +163,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                         '添加子组',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
+                                      if(!widget.group.recycleBin)
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
@@ -182,11 +185,11 @@ class _GroupDetailState extends State<GroupDetail> {
                                                     if (result.result != null) {
                                                       Toast.show(result.result);
                                                     } else if (mounted &&
-                                                        result.entry != null) {
+                                                        result.entryWrapper != null) {
                                                       Navigator.of(context)
                                                           .removeRoute(route);
                                                       final entryWrapper =
-                                                          result.entry!;
+                                                          result.entryWrapper!;
                                                       Navigator.of(context)
                                                           .push(
                                                               buildTransparentPageRoute(
@@ -217,7 +220,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                         '添加密钥',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
-                                  if (!widget.group.rootGroup)
+                                  if (!widget.group.rootGroup && !widget.group.recycleBin)
                                     TextButton(
                                         onPressed: () {
                                           showCenterDialog(context,
@@ -271,6 +274,58 @@ class _GroupDetailState extends State<GroupDetail> {
                                         },
                                         child: const Text(
                                           '删除该组',
+                                          style: AppTextStyle.textButtonBlue,
+                                        )),TextButton(
+                                        onPressed: () {
+                                          showCenterDialog(context,
+                                              builder: (_, __, ___, ____) =>
+                                                  TipsDialog(
+                                                      tips: '是否清空回收站（无法恢复）?',
+                                                      actions: [
+                                                        TextButton(
+                                                          child:
+                                                              const Text('取消'),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                        ),
+                                                        TextButton(
+                                                          child:
+                                                              const Text('确定'),
+                                                          onPressed: () async {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                            LoadingDialog
+                                                                .show();
+                                                            final result =
+                                                                  groupController
+                                                                    .clearRecycleBin(
+                                                                        widget
+                                                                            .group);
+                                                            LoadingDialog
+                                                                .dismiss();
+                                                            if (result !=
+                                                                    null &&
+                                                                result
+                                                                    .isNotEmpty) {
+                                                              Toast.show(
+                                                                  result);
+                                                            } else {
+                                                              if (mounted) {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              }
+                                                            }
+                                                          },
+                                                        ),
+                                                      ]));
+                                        },
+                                        child: const Text(
+                                          '清空',
                                           style: AppTextStyle.textButtonBlue,
                                         )),
                                 ]));

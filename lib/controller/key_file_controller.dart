@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:kdbx_lib/kdbx.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/utils/encrypt_tool.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path/path.dart' as p;
 
 class KeyFileController {
   Stream<bool> parseKdbxFile(File kdbxFile, String psw,
@@ -15,10 +18,8 @@ class KeyFileController {
       final result = await KeyStoreRepo.instance
           .decryptKdbxFile(data, psw)
           .handleError((e) {
-        print('testchange parse file errorr $e');
         streamController.addError(e);
       }).single;
-      print('testchange parse file ${result}  ${data.path}');
       if (!result) {
         streamController.add(false);
         await streamController.close();
@@ -35,11 +36,39 @@ class KeyFileController {
       streamController.add(true);
       await streamController.close();
 
-      print(
-          'testchange parse file  saved ${KeyStoreRepo.instance.currentFile.value?.encrypted.value}');
     }
 
     parse();
     return streamController.stream;
+  }
+
+  Future<String?> createNewKeyFile(String name,String psw) async{
+    try {
+      final keyFile = KeyStoreRepo.instance.kdbxFormat.create(Credentials(ProtectedValue.fromString(psw)), name);
+      final folder = (await KeyStoreRepo.instance.getInternalFolder()).path;
+      File internalFile = File(p.join(folder, name));
+      while (await internalFile.exists()) {
+        internalFile = File(p.join(folder,
+            '${name}_${DateTime.now().millisecondsSinceEpoch}'));
+      }
+      final wrapper = KdbxFileWrapper(internalFile.path);
+      wrapper.kdbxFile = keyFile; 
+      wrapper.encrypted.value = false;
+      final saveResult = await KeyStoreRepo.instance.saveKeyStore(wrapper);
+      if(saveResult != null) return saveResult;
+      wrapper.id = const Uuid().v4();
+      final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
+      savedFiles.add(
+          '$name@false@${wrapper.id}@${EncryptTool.encrypt(wrapper.path, psw)}');
+      KeyStoreRepo.instance.saveFiles(savedFiles);
+      wrapper.title.value = name;
+      wrapper.rootGroup = KdbxGroupWrapper(group: keyFile.body.rootGroup,rootGroup: true);
+      KeyStoreRepo.instance.savedKeyFiles.addItem(wrapper);
+      KeyStoreRepo.instance.currentFile.value = wrapper;
+      return null;
+    } catch (e) {
+      logger.e(e);
+    }
+    return '创建失败';
   }
 }

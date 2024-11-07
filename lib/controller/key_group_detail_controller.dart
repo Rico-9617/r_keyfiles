@@ -19,10 +19,10 @@ class KeyGroupDetailController {
     return null;
   }
 
-  Future<({KdbxEntryWrapper? entry, String? result})> createEntry(
-      String name, KdbxGroupWrapper group, KdbxFileWrapper fileWrapper) async {
-    if (fileWrapper.kdbxFile == null) return (entry: null, result: '创建失败');
-    final newEntry = KdbxEntry.create(fileWrapper.kdbxFile!, group.group);
+  Future<({KdbxEntryWrapper? entryWrapper, String? result})> createEntry(
+      String name, KdbxGroupWrapper groupWrapper, KdbxFileWrapper fileWrapper) async {
+    if (fileWrapper.kdbxFile == null) return (entryWrapper: null, result: '创建失败');
+    final newEntry = KdbxEntry.create(fileWrapper.kdbxFile!, groupWrapper.group);
     // group.group.addEntry(newEntry);
     newEntry.setString(KdbxKey('Title'), PlainValue(name));
     // final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
@@ -31,28 +31,28 @@ class KeyGroupDetailController {
     //   return saveResult;
     // }
     final entryWrapper =
-        KdbxEntryWrapper(entry: newEntry, parent: group, newEntry: true);
+        KdbxEntryWrapper(entry: newEntry, parent: groupWrapper, newEntry: true);
     entryWrapper.modified.value = true;
-    group.entries.addItem(entryWrapper);
-    return (entry: entryWrapper, result: null);
+    groupWrapper.entries.addItem(entryWrapper);
+    return (entryWrapper: entryWrapper, result: null);
   }
 
   void recoverEntry(
-      KdbxEntryWrapper entry, KdbxGroupWrapper group, KdbxFileWrapper keyFile) {
+      KdbxEntryWrapper entryWrapper, KdbxGroupWrapper groupWrapper, KdbxFileWrapper keyFile) {
     if (keyFile.kdbxFile == null) return;
     // keyFile.kdbxFile?.deleteEntry(entry.entry);
-    group.entries.removeItem(entry);
+    groupWrapper.entries.removeItem(entryWrapper);
   }
 
   Future<String?> deleteGroup(
-      KdbxGroupWrapper group, KdbxFileWrapper fileWrapper) async {
-    if (group.parent == null || fileWrapper.kdbxFile == null) return '删除失败';
+      KdbxGroupWrapper groupWrapper, KdbxFileWrapper fileWrapper) async {
+    if (groupWrapper.parent == null || fileWrapper.kdbxFile == null) return '删除失败';
     try {
-      if (KeyStoreRepo.instance.isUnderRecycleBin(group.parent!)) {
+      if (KeyStoreRepo.instance.isUnderRecycleBin(groupWrapper.parent!)) {
         //in recycle bin
-        fileWrapper.kdbxFile!.deletePermanently(group.group);
+        fileWrapper.kdbxFile!.deletePermanently(groupWrapper.group);
       } else {
-        fileWrapper.kdbxFile!.deleteGroup(group.group);
+        fileWrapper.kdbxFile!.deleteGroup(groupWrapper.group);
       }
     } catch (e) {
       logger.e(e);
@@ -62,26 +62,43 @@ class KeyGroupDetailController {
     if (saveResult != null) {
       return saveResult;
     }
-    group.parent!.groups.removeItem(group);
+    groupWrapper.parent!.groups.removeItem(groupWrapper);
     return null;
+  }
+
+   String?  clearRecycleBin(KdbxGroupWrapper groupWrapper){
+    try{
+      for (var subGroupWrapper in groupWrapper.groups.value) {
+        groupWrapper.group.file.deletePermanently(subGroupWrapper.group);
+      }
+      groupWrapper.groups.clearItems();
+      for (var entryWrapper in groupWrapper.entries.value) {
+        groupWrapper.group.file.deletePermanently(entryWrapper.entry);
+      }
+      groupWrapper.entries.clearItems();
+      return null;
+    }catch(e){
+      logger.e(e);
+    }
+    return '清空失败';
   }
 
   Future<String?> modifyGroupTitle(
     String title,
-    KdbxGroupWrapper group,
+    KdbxGroupWrapper groupWrapper,
     KdbxFileWrapper fileWrapper,
   ) async {
     if (fileWrapper.kdbxFile == null) return '修改失败';
-    if (!group.group.name.set(title)) return '修改失败';
+    if (!groupWrapper.group.name.set(title)) return '修改失败';
     final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
     if (saveResult != null) return saveResult;
-    if (group.rootGroup) {
+    if (groupWrapper.rootGroup) {
       await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
         data[0] = title;
         return data;
       });
     }
-    group.title.value = title;
+    groupWrapper.title.value = title;
     return null;
   }
 }
