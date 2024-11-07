@@ -53,7 +53,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         onTap: () async {
-                          LoadingDialog.show();
+                          Toast.show('testtestests');
                         },
                         child: const Text(
                           "新建",

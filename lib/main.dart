@@ -46,23 +46,18 @@ class _MyAppState extends State<MyApp> {
           'hasExternalStoragePermission ${hasExternalStoragePermission.value}');
     });
     return MaterialApp(
-      builder: (context, widget) {
-        logger.d('testpopmain mainbuilder $widget ');
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, _) {
-            logger.d('testpopmain $didPop');
-          },
+      navigatorObservers: [MainNavigatorObserver()],
+      home: Builder(builder: (context) {
+        return Material(
           child: Stack(
             children: [
-              Material(child: widget!),
+              MainPage(),
               LoadingDialog.instance,
               Toast.instance,
             ],
           ),
         );
-      },
-      home: MainPage(),
+      }),
     );
   }
 }
@@ -77,73 +72,158 @@ class ConsoleOutput extends LogOutput {
   }
 }
 
-class LoadingDialog extends StatelessWidget {
-  LoadingDialog._();
+class MainNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    super.didPush(route, previousRoute);
+    if (route.settings == _LoadingDialogState._instance?._routeSettings) {
+      _LoadingDialogState._instance?._route = route;
+    }
+  }
 
-  final isShowing = ValueNotifier(false);
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    super.didPop(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
+}
+
+class LoadingDialog extends StatefulWidget {
+  const LoadingDialog._();
 
   static LoadingDialog? _instance;
 
   static LoadingDialog get instance {
-    _instance ??= LoadingDialog._();
+    _instance ??= const LoadingDialog._();
     return _instance!;
   }
 
   static void show() {
-    instance.isShowing.value = true;
+    _LoadingDialogState._instance?._show();
   }
 
   static void dismiss() {
-    instance.isShowing.value = false;
+    _LoadingDialogState._instance?._dismiss();
+  }
+
+  @override
+  State<LoadingDialog> createState() => _LoadingDialogState();
+}
+
+class _LoadingDialogState extends State<LoadingDialog> {
+  static _LoadingDialogState? _instance;
+
+  _LoadingDialogState() {
+    _instance = this;
+  }
+
+  BuildContext? _context;
+
+  bool _isShowing = false;
+
+  final _routeSettings = const RouteSettings();
+
+  Route? _route;
+
+  void _show() {
+    if (_context == null || _isShowing) return;
+    _isShowing = true;
+    showDialog(
+        context: _context!,
+        barrierColor: Colors.transparent,
+        routeSettings: _routeSettings,
+        builder: (context) {
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, _) {
+              if (didPop) return;
+            },
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }).then((_) {
+      _route = null;
+      _isShowing = false;
+    });
+  }
+
+  void _dismiss() {
+    if (_context == null || !_isShowing) return;
+    final navigator = Navigator.of(_context!);
+    dismiss() async {
+      while (_isShowing && _route == null) {
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
+      navigator.removeRoute(_route!);
+      _isShowing = false;
+    }
+
+    dismiss();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-        valueListenable: isShowing,
-        builder: (context, isShowing, child) {
-          return isShowing
-              ? GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  child: Container(
-                    color: Colors.transparent,
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                )
-              : const SizedBox();
-        });
+    _context = context;
+    return const SizedBox();
   }
 }
 
-class Toast extends StatelessWidget {
-  Toast._();
+class Toast extends StatefulWidget {
+  static final _key = GlobalKey<_ToastState>();
 
-  final toastText = ValueNotifier<String?>(null);
+  const Toast._({super.key});
 
   static Toast? _instance;
 
   static Toast get instance {
-    _instance ??= Toast._();
+    _instance ??= Toast._(key: _key);
     return _instance!;
   }
 
   static show(String? text) {
-    if (text == null || text.isEmpty) return;
+    if (text == null || text.isEmpty || _key.currentState == null) return;
+    _key.currentState!._show(text);
+  }
+
+  @override
+  State<Toast> createState() => _ToastState();
+}
+
+class _ToastState extends State<Toast> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  final toastText = ValueNotifier<String?>(null);
+
+  @override
+  void initState() {
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200))
+      ..addStatusListener((status) {
+        if (status.isDismissed) {
+          toastText.value = null;
+        }
+      });
+    super.initState();
+  }
+
+  void _show(String? text) {
     final currentText = text;
     dismiss() async {
       await Future.delayed(const Duration(milliseconds: 3000));
-      if (instance.toastText.value != null &&
-          instance.toastText.value != currentText) return;
-      instance.toastText.value = null;
+      if (toastText.value != null && toastText.value != currentText) return;
+      _animationController.reverse();
     }
 
     update() async {
-      if (instance.toastText.value != null) {
+      if (toastText.value != null) {
         await Future.delayed(const Duration(milliseconds: 1000));
       }
-      instance.toastText.value = text;
+      toastText.value = text;
+      _animationController.forward();
       dismiss();
     }
 
@@ -156,21 +236,51 @@ class Toast extends StatelessWidget {
         valueListenable: toastText,
         builder: (_, toastText, __) {
           final bottom = MediaQuery.of(context).padding.bottom + 150;
-          return toastText == null || toastText.isEmpty
-              ? const SizedBox()
-              : Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    margin:
-                        EdgeInsets.only(left: 16, right: 16, bottom: bottom),
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(color: Colors.black87),
-                    child: Text(
-                      toastText,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+          final show = toastText != null && toastText.isNotEmpty;
+          return show
+              ? AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (_, child) {
+                    return Opacity(
+                      opacity: _animationController.value,
+                      child: child,
+                    );
+                  },
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin:
+                          EdgeInsets.only(left: 16, right: 16, bottom: bottom),
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(color: Colors.black87),
+                      child: Text(
+                        toastText,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
                     ),
                   ),
-                );
+                )
+              : const SizedBox();
         });
+  }
+}
+
+class MainWidgetBindingObserver with WidgetsBindingObserver {
+  MainWidgetBindingObserver._() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  static MainWidgetBindingObserver? _instance;
+
+  static MainWidgetBindingObserver get instance {
+    _instance ??= MainWidgetBindingObserver._();
+    return _instance!;
+  }
+
+  @override
+  Future<bool> didPopRoute() async {
+    logger.w('main didPopRoute ');
+    return true; //super.didPopRoute();
   }
 }
