@@ -46,19 +46,18 @@ class _MyAppState extends State<MyApp> {
           'hasExternalStoragePermission ${hasExternalStoragePermission.value}');
     });
     return MaterialApp(
-      navigatorObservers: [MainNavigatorObserver()],
-      home: Builder(builder: (context) {
-        return Material(
-          child: Stack(
-            children: [
-              MainPage(),
-              LoadingDialog.instance,
-              Toast.instance,
-            ],
-          ),
-        );
-      }),
-    );
+        navigatorObservers: [MainNavigatorObserver()],
+        builder: (context, child) {
+          return Material(
+            child: Stack(
+              children: [
+                if (child != null) child,
+                Toast.instance,
+              ],
+            ),
+          );
+        },
+        home: LoadingDialog(child: MainPage()));
   }
 }
 
@@ -92,15 +91,33 @@ class MainNavigatorObserver extends NavigatorObserver {
   }
 }
 
-class LoadingDialog extends StatefulWidget {
-  const LoadingDialog._();
+class MainOverlay extends StatefulWidget {
+  final Widget? child;
 
-  static LoadingDialog? _instance;
+  const MainOverlay({super.key, this.child});
 
-  static LoadingDialog get instance {
-    _instance ??= const LoadingDialog._();
-    return _instance!;
+  @override
+  State<MainOverlay> createState() => _MainOverlayState();
+}
+
+class _MainOverlayState extends State<MainOverlay> {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: Stack(
+        children: [
+          if (widget.child != null) widget.child!,
+          Toast.instance,
+        ],
+      ),
+    );
   }
+}
+
+class LoadingDialog extends StatefulWidget {
+  final Widget child;
+
+  const LoadingDialog({super.key, required this.child});
 
   static void show() {
     _LoadingDialogState._instance?._show();
@@ -169,7 +186,7 @@ class _LoadingDialogState extends State<LoadingDialog> {
   @override
   Widget build(BuildContext context) {
     _context = context;
-    return const SizedBox();
+    return widget.child;
   }
 }
 
@@ -263,24 +280,5 @@ class _ToastState extends State<Toast> with SingleTickerProviderStateMixin {
                 )
               : const SizedBox();
         });
-  }
-}
-
-class MainWidgetBindingObserver with WidgetsBindingObserver {
-  MainWidgetBindingObserver._() {
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  static MainWidgetBindingObserver? _instance;
-
-  static MainWidgetBindingObserver get instance {
-    _instance ??= MainWidgetBindingObserver._();
-    return _instance!;
-  }
-
-  @override
-  Future<bool> didPopRoute() async {
-    logger.w('main didPopRoute ');
-    return true; //super.didPopRoute();
   }
 }

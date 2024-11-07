@@ -52,9 +52,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                     ClickableWidget(
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        onTap: () async {
-                          Toast.show('testtestests');
-                        },
+                        onTap: () async {},
                         child: const Text(
                           "新建",
                           style: AppTextStyle.textWhite,
