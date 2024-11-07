@@ -1,4 +1,5 @@
 import 'package:kdbx_lib/kdbx.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 
@@ -18,25 +19,45 @@ class KeyGroupDetailController {
     return null;
   }
 
-  Future<String?> createEntry(
+  Future<({KdbxEntryWrapper? entry, String? result})> createEntry(
       String name, KdbxGroupWrapper group, KdbxFileWrapper fileWrapper) async {
-    if (fileWrapper.kdbxFile == null) return '创建失败';
-    final newEntry = KdbxEntry.create(
-        fileWrapper.kdbxFile!, fileWrapper.kdbxFile!.body.rootGroup);
+    if (fileWrapper.kdbxFile == null) return (entry: null, result: '创建失败');
+    final newEntry = KdbxEntry.create(fileWrapper.kdbxFile!, group.group);
     // group.group.addEntry(newEntry);
-    final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
-    if (saveResult != null) {
-      group.group.entries.remove(newEntry);
-      return saveResult;
-    }
-    group.entries.addItem(KdbxEntryWrapper(entry: newEntry));
-    return null;
+    newEntry.setString(KdbxKey('Title'), PlainValue(name));
+    // final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
+    // if (saveResult != null) {
+    //   group.group.entries.remove(newEntry);
+    //   return saveResult;
+    // }
+    final entryWrapper =
+        KdbxEntryWrapper(entry: newEntry, parent: group, newEntry: true);
+    entryWrapper.modified.value = true;
+    group.entries.addItem(entryWrapper);
+    return (entry: entryWrapper, result: null);
+  }
+
+  void recoverEntry(
+      KdbxEntryWrapper entry, KdbxGroupWrapper group, KdbxFileWrapper keyFile) {
+    if (keyFile.kdbxFile == null) return;
+    // keyFile.kdbxFile?.deleteEntry(entry.entry);
+    group.entries.removeItem(entry);
   }
 
   Future<String?> deleteGroup(
       KdbxGroupWrapper group, KdbxFileWrapper fileWrapper) async {
-    if (group.parent == null) return '删除失败';
-    if (!group.parent!.group.groups.remove(group.group)) return '删除失败';
+    if (group.parent == null || fileWrapper.kdbxFile == null) return '删除失败';
+    try {
+      if (KeyStoreRepo.instance.isUnderRecycleBin(group.parent!)) {
+        //in recycle bin
+        fileWrapper.kdbxFile!.deletePermanently(group.group);
+      } else {
+        fileWrapper.kdbxFile!.deleteGroup(group.group);
+      }
+    } catch (e) {
+      logger.e(e);
+      return '删除失败';
+    }
     final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
     if (saveResult != null) {
       return saveResult;
@@ -60,7 +81,7 @@ class KeyGroupDetailController {
         return data;
       });
     }
-    fileWrapper.title.value = title;
+    group.title.value = title;
     return null;
   }
 }

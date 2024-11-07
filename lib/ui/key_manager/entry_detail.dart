@@ -58,7 +58,7 @@ class _EntryDetailState extends State<EntryDetail> {
     hideKeyboard(context);
     if (widget.entry.modified.value) {
       showCenterDialog(context,
-          builder: (_, __, ___) => TipsDialog(
+          builder: (_, __, ___, ____) => TipsDialog(
                 tips: '内容有变更，是否保存?',
                 actions: [
                   TextButton(
@@ -66,7 +66,7 @@ class _EntryDetailState extends State<EntryDetail> {
                     onPressed: () {
                       Navigator.of(context).pop();
                       entryDetailController.recover(widget.entry);
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(false);
                     },
                   ),
                   TextButton(
@@ -74,14 +74,14 @@ class _EntryDetailState extends State<EntryDetail> {
                     onPressed: () async {
                       Navigator.of(context).pop();
                       if (await save() && mounted) {
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(true);
                       }
                     },
                   ),
                 ],
               ));
     } else {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(!widget.entry.newEntry);
     }
   }
 
@@ -140,7 +140,7 @@ class _EntryDetailState extends State<EntryDetail> {
                           onPressed: () {
                             hideKeyboard(context);
                             showCenterDialog(context,
-                                builder: (_, __, ___) => TextInputDialog(
+                                builder: (_, __, ___, ____) => TextInputDialog(
                                       onConfirm: (text) async {
                                         LoadingDialog.show();
                                         final result = entryDetailController
@@ -167,7 +167,7 @@ class _EntryDetailState extends State<EntryDetail> {
                           onPressed: () {
                             hideKeyboard(context);
                             showCenterDialog(context,
-                                builder: (_, __, ___) =>
+                                builder: (_, __, ___, ____) =>
                                     TipsDialog(tips: '是否删除该密钥?', actions: [
                                       TextButton(
                                         child: const Text('取消'),

@@ -1,46 +1,55 @@
 import 'package:flutter/material.dart';
 
-void showDialog(
+Future showDialog(
   BuildContext context, {
-  required RoutePageBuilder builder,
+  required DialogRoutePageBuilder builder,
   bool barrierDismiss = true,
   AlignmentGeometry alignment = Alignment.center,
 }) {
-  Navigator.of(context).push(
-    PageRouteBuilder(
-      opaque: false,
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          builder.call(context, animation, secondaryAnimation),
-      transitionDuration: const Duration(milliseconds: 200),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return Stack(
-          children: [
-            FadeTransition(
-              opacity: animation,
-              child: GestureDetector(
-                onTap: barrierDismiss ? Navigator.of(context).pop : null,
-                child: Container(
-                  color: Colors.black54, // Translucent background
-                ),
+  late Route route;
+  route = PageRouteBuilder(
+    opaque: false,
+    pageBuilder: (context, animation, secondaryAnimation) =>
+        builder.call(context, animation, secondaryAnimation, route),
+    transitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return Stack(
+        children: [
+          FadeTransition(
+            opacity: animation,
+            child: GestureDetector(
+              onTap: barrierDismiss ? Navigator.of(context).pop : null,
+              child: Container(
+                color: Colors.black54, // Translucent background
               ),
             ),
-            Align(alignment: alignment, child: GestureDetector(child: child)),
-          ],
-        );
-      },
-    ),
+          ),
+          Align(alignment: alignment, child: GestureDetector(child: child)),
+        ],
+      );
+    },
+  );
+  return Navigator.of(context).push(
+    route,
   );
 }
 
-void showCenterDialog(
+Future showCenterDialog(
   BuildContext context, {
-  required RoutePageBuilder builder,
+  required DialogRoutePageBuilder builder,
   bool barrierDismiss = true,
 }) {
-  showDialog(context, builder: (context, animation, secondaryAnimation) {
+  return showDialog(context,
+      builder: (context, animation, secondaryAnimation, route) {
     return ScaleTransition(
       scale: animation,
-      child: builder.call(context, animation, secondaryAnimation),
+      child: builder.call(context, animation, secondaryAnimation, route),
     );
   });
 }
+
+typedef DialogRoutePageBuilder = Widget Function(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Route route);

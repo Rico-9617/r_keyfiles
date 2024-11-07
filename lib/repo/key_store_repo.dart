@@ -151,4 +151,17 @@ class KeyStoreRepo {
     }
     return '保存失败';
   }
+
+  bool isUnderRecycleBin(KdbxGroupWrapper groupWrapper) {
+    if (isRecycleBin(groupWrapper.group)) {
+      return true;
+    } else if (groupWrapper.parent != null) {
+      return isUnderRecycleBin(groupWrapper.parent!);
+    }
+    return false;
+  }
+
+  bool isRecycleBin(KdbxGroup group) {
+    return group == group.file.recycleBin;
+  }
 }

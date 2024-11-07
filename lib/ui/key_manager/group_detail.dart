@@ -97,7 +97,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
-                                            builder: (_, __, ___) =>
+                                            builder: (_, __, ___, ____) =>
                                                 TextInputDialog(
                                                   onConfirm: (text) async {
                                                     if (text.isEmpty) {
@@ -112,11 +112,11 @@ class _GroupDetailState extends State<GroupDetail> {
                                                       widget.group,
                                                       widget.keyFile,
                                                     );
+                                                    LoadingDialog.dismiss();
                                                     if (result != null &&
                                                         result.isNotEmpty) {
                                                       Toast.show(result);
                                                     }
-                                                    LoadingDialog.dismiss();
 
                                                     return result == null;
                                                   },
@@ -132,7 +132,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
-                                            builder: (_, __, ___) =>
+                                            builder: (_, __, ___, ____) =>
                                                 TextInputDialog(
                                                   onConfirm: (text) async {
                                                     if (text.isEmpty) {
@@ -164,7 +164,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                   TextButton(
                                       onPressed: () {
                                         showCenterDialog(context,
-                                            builder: (_, __, ___) =>
+                                            builder: (_, __, ___, route) =>
                                                 TextInputDialog(
                                                   onConfirm: (text) async {
                                                     if (text.isEmpty) {
@@ -178,13 +178,37 @@ class _GroupDetailState extends State<GroupDetail> {
                                                                 text,
                                                                 widget.group,
                                                                 widget.keyFile);
-                                                    if (result != null &&
-                                                        result.isNotEmpty) {
-                                                      Toast.show(result);
-                                                    }
                                                     LoadingDialog.dismiss();
-
-                                                    return result == null;
+                                                    if (result.result != null) {
+                                                      Toast.show(result.result);
+                                                    } else if (mounted &&
+                                                        result.entry != null) {
+                                                      Navigator.of(context)
+                                                          .removeRoute(route);
+                                                      final entryWrapper =
+                                                          result.entry!;
+                                                      Navigator.of(context)
+                                                          .push(
+                                                              buildTransparentPageRoute(
+                                                        EntryDetail(
+                                                            keyFile:
+                                                                widget.keyFile,
+                                                            entry: entryWrapper,
+                                                            heroTag:
+                                                                'key_title_${entryWrapper.hashCode}'),
+                                                      ))
+                                                          .then((saved) {
+                                                        if (saved != true) {
+                                                          groupController
+                                                              .recoverEntry(
+                                                                  entryWrapper,
+                                                                  widget.group,
+                                                                  widget
+                                                                      .keyFile);
+                                                        }
+                                                      });
+                                                    }
+                                                    return false;
                                                   },
                                                   title: '新密钥名称',
                                                 ));
@@ -197,7 +221,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                     TextButton(
                                         onPressed: () {
                                           showCenterDialog(context,
-                                              builder: (_, __, ___) =>
+                                              builder: (_, __, ___, ____) =>
                                                   TipsDialog(
                                                       tips: '是否删除该组?',
                                                       actions: [
@@ -309,7 +333,7 @@ class _GroupDetailState extends State<GroupDetail> {
                             itemCount: entries.length,
                             itemBuilder: (context, index) {
                               final item = entries[index];
-                              final heroTag = 'key_title_$index';
+                              final heroTag = 'key_title_${item.hashCode}';
                               return GestureDetector(
                                 onTap: () {
                                   Navigator.of(context)

@@ -162,7 +162,7 @@ class KeyStoreDetail extends StatelessWidget {
                       child: TextButton(
                           onPressed: () {
                             showCenterDialog(context,
-                                builder: (_, __, ___) =>
+                                builder: (_, __, ___, ____) =>
                                     TipsDialog(tips: '是否删除该文件?', actions: [
                                       TextButton(
                                         child: const Text('取消'),
