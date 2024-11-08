@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:kdbx_lib/kdbx.dart';
+import 'package:r_backup_tool/foundation/list_value_notifier.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
@@ -9,6 +10,8 @@ class KeyEntryDetailController {
   final urlEditController = TextEditingController();
   final noteEditController = TextEditingController();
   final pswEditController = TextEditingController();
+  final tagsEditController = TextEditingController();
+  final binaryData = ListValueNotifier<String>([]);
   ProtectedValue? curPsw;
 
   KeyEntryDetailController(KdbxEntryWrapper entry) {
@@ -35,8 +38,20 @@ class KeyEntryDetailController {
     });
     final originPsw = entry.entry.getString(KdbxKey('Password'));
     curPsw = originPsw as ProtectedValue?;
-    pswEditController.text =
-        originPsw?.getText().replaceAll(RegExp(r'.'), '*') ?? '';
+    setDisplayPsw();
+
+    setDisplayTags(entry);
+    tagsEditController.addListener(() {
+      if (tagsEditController.text != entry.entry.tags.get()) {
+        entry.modified.value = true;
+      }
+    });
+
+    binaryData.addAllItems(entry.entry.binaryEntries.map((e) => e.key.key));
+  }
+
+  void setDisplayTags(KdbxEntryWrapper entry) {
+    tagsEditController.text = entry.entry.tags.get() ?? '';
   }
 
   dispose() {
@@ -48,11 +63,10 @@ class KeyEntryDetailController {
   }
 
   switchPswDisplay(bool encrypt) {
-    pswEditController.text = (encrypt
-            ? curPsw?.getText().replaceAll(RegExp(r'.'), '*')
-            : curPsw?.getText()) ??
-        '';
+    pswEditController.text = (encrypt ? encryptPsw() : curPsw?.getText()) ?? '';
   }
+
+  String encryptPsw() => curPsw == null ? '' : '******';
 
   Future<String?> saveChanges(
       KdbxFileWrapper keyFile, KdbxEntryWrapper entry) async {
@@ -62,6 +76,7 @@ class KeyEntryDetailController {
     final originURL = entry.entry.getString(KdbxKey('URL'));
     final originUserName = entry.entry.getString(KdbxKey('UserName'));
     final originPassword = entry.entry.getString(KdbxKey('Password'));
+    final originTags = entry.entry.tags.get();
     entry.entry.setString(KdbxKey('Title'), entry.title.value);
     entry.entry
         .setString(KdbxKey('Notes'), PlainValue(noteEditController.text));
@@ -69,6 +84,7 @@ class KeyEntryDetailController {
     entry.entry.setString(
         KdbxKey('UserName'), PlainValue(userNameEditController.text));
     entry.entry.setString(KdbxKey('Password'), curPsw);
+    entry.entry.tags.set(tagsEditController.text);
     if (entry.newEntry) {
       entry.parent?.group.addEntry(entry.entry);
     }
@@ -79,6 +95,7 @@ class KeyEntryDetailController {
       entry.entry.setString(KdbxKey('URL'), originURL);
       entry.entry.setString(KdbxKey('UserName'), originUserName);
       entry.entry.setString(KdbxKey('Password'), originPassword);
+      entry.entry.tags.set(originTags);
       return saveResult;
     }
     entry.modified.value = false;
@@ -91,6 +108,7 @@ class KeyEntryDetailController {
     setDisplayNotes(entry);
     setDisplayURL(entry);
     setDisplayUserName(entry);
+    setDisplayTags(entry);
     curPsw = entry.entry.getString(KdbxKey('Password')) as ProtectedValue?;
     setDisplayPsw();
     entry.modified.value = false;
@@ -120,7 +138,7 @@ class KeyEntryDetailController {
   }
 
   void setDisplayPsw() {
-    pswEditController.text = curPsw?.getText().replaceAll(r'.', '*') ?? '';
+    pswEditController.text = encryptPsw();
   }
 
   String? modifyEntryName(String name, KdbxEntryWrapper entry) {

@@ -55,22 +55,27 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         height: 50,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         onTap: () async {
-                          showCenterDialog(context, builder: (_,__,___,____){
-                            return TextInputDialog(onConfirm: (text) async{
-                              PasswordDialog(
-                                onConfirm: (p) async {
-                                  LoadingDialog.show();
-                                  final result = await keyFileController
-                                      .createNewKeyFile(text, p);
-                                  LoadingDialog.dismiss();
-                                  if(result != null) {
-                                    Toast.show(result);
-                                  }
-                                  return result == null;
-                                },
-                              ).show(context);
-                              return true;
-                            });
+                          showCenterDialog(context,
+                              builder: (_, __, ___, ____) {
+                            return TextInputDialog(
+                                title: '输入文件名',
+                                onConfirm: (text) async {
+                                  Navigator.pop(context);
+                                  PasswordDialog(
+                                    useGenerator: true,
+                                    onConfirm: (p) async {
+                                      LoadingDialog.show();
+                                      final result = await keyFileController
+                                          .createNewKeyFile(text, p);
+                                      LoadingDialog.dismiss();
+                                      if (result != null) {
+                                        Toast.show(result);
+                                      }
+                                      return result == null;
+                                    },
+                                  ).show(context);
+                                  return false;
+                                });
                           });
                         },
                         child: const Text(
@@ -125,30 +130,39 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                                             },
                                             child: ValueListenableBuilder(
                                               builder: (_, file, __) {
+                                                final selected = file == e;
                                                 return Container(
                                                   height: 41,
                                                   alignment: Alignment.center,
                                                   padding: const EdgeInsets
                                                       .symmetric(
                                                       horizontal: 12),
-                                                  color: file == e
+                                                  color: selected
                                                       ? AppColors
                                                           .detailBackground
                                                       : Colors.transparent,
                                                   child: ValueListenableBuilder(
                                                     builder: (_, title, __) {
-                                                      return Text(
-                                                        title,
-                                                        style: file == e
-                                                            ? AppTextStyle
-                                                                .textPrimary
-                                                                .copyWith(
-                                                                    fontSize:
-                                                                        16)
-                                                            : const TextStyle(
-                                                                color: Colors
-                                                                    .black54,
-                                                                fontSize: 12),
+                                                      return AnimatedContainer(
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    150),
+                                                        transform:
+                                                            Matrix4.identity()
+                                                              ..scale(selected
+                                                                  ? 1.2
+                                                                  : 1.0),
+                                                        child: Text(
+                                                          title,
+                                                          style: TextStyle(
+                                                              color: selected
+                                                                  ? AppColors
+                                                                      .text0
+                                                                  : Colors
+                                                                      .black54,
+                                                              fontSize: 12),
+                                                        ),
                                                       );
                                                     },
                                                     valueListenable: e.title,

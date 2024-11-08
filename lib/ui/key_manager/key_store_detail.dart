@@ -12,7 +12,7 @@ import 'package:r_backup_tool/ui/key_manager/group_detail.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
 
-class KeyStoreDetail extends StatelessWidget {
+class KeyStoreDetail extends StatefulWidget {
   final KdbxFileWrapper keyFile;
   final KeyStoreDetailController detailController;
 
@@ -22,9 +22,14 @@ class KeyStoreDetail extends StatelessWidget {
   }) : detailController = const KeyStoreDetailController();
 
   @override
+  State<KeyStoreDetail> createState() => _KeyStoreDetailState();
+}
+
+class _KeyStoreDetailState extends State<KeyStoreDetail> {
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: keyFile.encrypted,
+        valueListenable: widget.keyFile.encrypted,
         builder: (_, encrypted, __) => encrypted
             ? Stack(
                 children: [
@@ -34,10 +39,19 @@ class KeyStoreDetail extends StatelessWidget {
                           PasswordDialog(
                             onConfirm: (p) async {
                               LoadingDialog.show();
-                              final result = await detailController
-                                  .decodeSavedFile(keyFile, p)
-                                  .handleError((e) {
-                                Toast.show(e.toString());
+                              final result = await widget.detailController
+                                  .decodeSavedFile(widget.keyFile, p)
+                                  .handleError((e) async {
+                                if (e is PathNotFoundException) {
+                                  Toast.show('文件不存在！');
+                                  await widget.detailController
+                                      .deleteKeyStore(widget.keyFile);
+                                  if (mounted) {
+                                    Navigator.pop(context);
+                                  }
+                                } else {
+                                  Toast.show(e.toString());
+                                }
                               }).single;
 
                               LoadingDialog.dismiss();
@@ -58,7 +72,7 @@ class KeyStoreDetail extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ValueListenableBuilder(
-                      valueListenable: keyFile.externalStore,
+                      valueListenable: widget.keyFile.externalStore,
                       builder: (_, isExternal, child) {
                         return ValueListenableBuilder(
                           builder: (_, hasStoragePermission, __) {
@@ -69,9 +83,10 @@ class KeyStoreDetail extends StatelessWidget {
                                       PasswordDialog(
                                         onConfirm: (p) async {
                                           LoadingDialog.show();
-                                          final result = await detailController
+                                          final result = await widget
+                                              .detailController
                                               .importExternalKeyStore(
-                                                  keyFile, p);
+                                                  widget.keyFile, p);
                                           if (result != null &&
                                               result.isNotEmpty) {
                                             Toast.show(result);
@@ -81,7 +96,10 @@ class KeyStoreDetail extends StatelessWidget {
                                         },
                                       ).show(context);
                                     },
-                                    child: const Text('导入以编辑')),
+                                    child: const Text(
+                                      '导入以编辑',
+                                      style: AppTextStyle.textButtonBlue,
+                                    )),
                               if (isExternal && !hasStoragePermission)
                                 TextButton(
                                     onPressed: () async {
@@ -103,9 +121,10 @@ class KeyStoreDetail extends StatelessWidget {
                                         title: '设置新密码',
                                         onConfirm: (p) async {
                                           LoadingDialog.show();
-                                          final result = await detailController
+                                          final result = await widget
+                                              .detailController
                                               .modifyKeyFilePassword(
-                                                  keyFile, p);
+                                                  widget.keyFile, p);
                                           if (result != null &&
                                               result.isNotEmpty) {
                                             Toast.show(result);
@@ -141,9 +160,10 @@ class KeyStoreDetail extends StatelessWidget {
                                         }
                                         final outputFile = File(p.join(
                                             outputDir.path,
-                                            '${keyFile.title}.kdbx'));
+                                            '${widget.keyFile.title}.kdbx'));
                                         await outputFile.writeAsBytes(
-                                            await keyFile.kdbxFile!.save(),
+                                            await widget.keyFile.kdbxFile!
+                                                .save(),
                                             flush: true);
                                       } catch (e) {
                                         logger.e(e);
@@ -175,8 +195,8 @@ class KeyStoreDetail extends StatelessWidget {
                                         onPressed: () async {
                                           Navigator.of(context).pop();
                                           LoadingDialog.show();
-                                          await detailController
-                                              .deleteKeyStore(keyFile);
+                                          await widget.detailController
+                                              .deleteKeyStore(widget.keyFile);
                                           LoadingDialog.dismiss();
                                         },
                                       ),
@@ -190,8 +210,8 @@ class KeyStoreDetail extends StatelessWidget {
                   ),
                   Expanded(
                     child: GroupDetail(
-                      group: keyFile.rootGroup!,
-                      keyFile: keyFile,
+                      group: widget.keyFile.rootGroup!,
+                      keyFile: widget.keyFile,
                       individual: false,
                     ),
                   ),

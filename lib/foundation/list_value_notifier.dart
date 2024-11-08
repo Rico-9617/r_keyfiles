@@ -12,8 +12,13 @@ class ListValueNotifier<T> extends ValueNotifier<List<T>> {
     notifyListeners();
   }
 
-  void clearItems(){
+  void clearItems() {
     value.clear();
+    notifyListeners();
+  }
+
+  void addAllItems(Iterable<T> items) {
+    value.addAll(items);
     notifyListeners();
   }
 }

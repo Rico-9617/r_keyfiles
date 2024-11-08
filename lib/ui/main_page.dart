@@ -24,51 +24,59 @@ class MainPage extends StatelessWidget {
                     _ => const SizedBox.shrink(),
                   };
                 })),
-        Container(
-          decoration: const BoxDecoration(
-            color: Colors.greenAccent,
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black12,
-                  offset: Offset(0.0, -1.0),
-                  spreadRadius: 1,
-                  blurRadius: 2)
-            ],
-          ),
-          height: 80,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              InkWell(
-                onTap: () {
-                  _tab.value = 0;
-                },
-                child: ValueListenableBuilder(
-                    valueListenable: _tab,
-                    builder: (_, index, __) {
-                      final selected = index == 0;
-                      return AnimatedScale(
-                        scale: 1.2,
-                        duration: const Duration(milliseconds: 150),
-                        child: Text(
-                          '信息管理',
-                          style: TextStyle(
-                              color: selected
-                                  ? AppColors.text0
-                                  : AppColors.textDisable,
-                              fontSize: 12),
-                        ),
-                      );
-                    }),
-              ),
-            ],
-          ),
-        ),
+        // Container(
+        //   decoration: const BoxDecoration(
+        //     color: Colors.greenAccent,
+        //     boxShadow: [
+        //       BoxShadow(
+        //           color: Colors.black12,
+        //           offset: Offset(0.0, -1.0),
+        //           spreadRadius: 1,
+        //           blurRadius: 2)
+        //     ],
+        //   ),
+        //   height: 70,
+        //   child: Row(
+        //     children: [
+        //       _buildMenuItem('信息管理', 0),
+        //     ],
+        //   ),
+        // ),
         Container(
           color: Colors.greenAccent,
           height: MediaQuery.of(context).padding.bottom,
         ),
       ],
+    );
+  }
+
+  Expanded _buildMenuItem(String title, int index) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          _tab.value = index;
+        },
+        child: Container(
+          alignment: Alignment.center,
+          child: ValueListenableBuilder(
+              valueListenable: _tab,
+              builder: (_, i, __) {
+                final selected = i == index;
+                return AnimatedContainer(
+                  transform: Matrix4.identity()..scale(selected ? 1.2 : 1.0),
+                  duration: const Duration(milliseconds: 150),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                        color:
+                            selected ? AppColors.text0 : AppColors.textDisable,
+                        fontSize: selected ? 14 : 12),
+                  ),
+                );
+              }),
+        ),
+      ),
     );
   }
 }

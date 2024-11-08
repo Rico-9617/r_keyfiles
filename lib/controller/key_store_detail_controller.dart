@@ -16,6 +16,7 @@ class KeyStoreDetailController {
     Future<void> parse() async {
       try {
         final path = EncryptTool.decrypt(fileWrapper.path, psw);
+        logger.d('testfiles   $path ');
         if (path == null) {
           streamController.addError('密码错误!');
           streamController.add(false);

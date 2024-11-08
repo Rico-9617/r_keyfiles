@@ -31,7 +31,6 @@ class KeyStoreRepo {
     if (savedFiles.isEmpty) return;
     savedKeyFiles.value = List.generate(savedFiles.length, (index) {
       final item = savedFiles[index].toString().split('@');
-      logger.d(savedFiles[index]);
       final file = KdbxFileWrapper(item[3], externalStore: bool.parse(item[1]));
       file.title.value = item[0];
       file.id = item[2];
@@ -86,7 +85,10 @@ class KeyStoreRepo {
     saveFiles(savedFiles);
 
     if (!fileWrapper.externalStore.value) {
-      await File(fileWrapper.path).delete();
+      final file = File(fileWrapper.path);
+      if (await file.exists()) {
+        await file.delete();
+      }
     }
 
     KeyStoreRepo.instance.savedKeyFiles.removeItem(fileWrapper);
