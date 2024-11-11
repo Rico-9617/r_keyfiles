@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_entry_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
-import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
+import 'package:r_backup_tool/ui/key_manager/entry_base_info.dart';
 import 'package:r_backup_tool/utils/tools.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
-import 'package:r_backup_tool/widgets/text_field_wrapper.dart';
+
+import 'entry_files.dart';
+import 'entry_other_info.dart';
 
 class EntryDetail extends StatefulWidget {
   final KdbxFileWrapper keyFile;
@@ -28,24 +29,25 @@ class EntryDetail extends StatefulWidget {
 }
 
 class _EntryDetailState extends State<EntryDetail> {
-  late KeyEntryDetailController entryDetailController;
+  late KeyEntryDetailController _entryDetailController;
+  final _tab = ValueNotifier(0);
 
   @override
   void initState() {
-    entryDetailController = KeyEntryDetailController(widget.entry);
+    _entryDetailController =
+        KeyEntryDetailController(keyFile: widget.keyFile, entry: widget.entry);
     super.initState();
   }
 
   @override
   void dispose() {
-    entryDetailController.dispose();
+    _entryDetailController.dispose();
     super.dispose();
   }
 
   Future<bool> save() async {
     LoadingDialog.show();
-    final result =
-        await entryDetailController.saveChanges(widget.keyFile, widget.entry);
+    final result = await _entryDetailController.saveChanges();
     LoadingDialog.dismiss();
     if (result != null && result.isNotEmpty) {
       Toast.show(result);
@@ -65,7 +67,7 @@ class _EntryDetailState extends State<EntryDetail> {
                     child: const Text('忽略'),
                     onPressed: () {
                       Navigator.of(context).pop();
-                      entryDetailController.recover(widget.entry);
+                      _entryDetailController.recover();
                       Navigator.of(context).pop(false);
                     },
                   ),
@@ -136,16 +138,16 @@ class _EntryDetailState extends State<EntryDetail> {
                       if (!widget.keyFile.externalStore.value ||
                           hasExternalStoragePermission.value)
                         OutlinedButton(
-                          child: const Text('修改名称'),
+                          child: const Text('修改名称',
+                              style: AppTextStyle.textButtonBlue),
                           onPressed: () {
                             hideKeyboard(context);
                             showCenterDialog(context,
                                 builder: (_, __, ___, ____) => TextInputDialog(
                                       onConfirm: (text) async {
                                         LoadingDialog.show();
-                                        final result = entryDetailController
-                                            .modifyEntryName(
-                                                text, widget.entry);
+                                        final result = _entryDetailController
+                                            .modifyEntryName(text);
                                         LoadingDialog.dismiss();
                                         if (result != null &&
                                             result.isNotEmpty) {
@@ -163,7 +165,8 @@ class _EntryDetailState extends State<EntryDetail> {
                       if (!widget.keyFile.externalStore.value ||
                           hasExternalStoragePermission.value)
                         OutlinedButton(
-                          child: const Text('删除'),
+                          child: const Text('删除',
+                              style: AppTextStyle.textButtonBlue),
                           onPressed: () {
                             hideKeyboard(context);
                             showCenterDialog(context,
@@ -181,9 +184,8 @@ class _EntryDetailState extends State<EntryDetail> {
                                           Navigator.of(context).pop();
                                           LoadingDialog.show();
                                           final result =
-                                              await entryDetailController
-                                                  .deleteEntry(widget.keyFile,
-                                                      widget.entry);
+                                              await _entryDetailController
+                                                  .deleteEntry();
                                           LoadingDialog.dismiss();
                                           if (result != null &&
                                               result.isNotEmpty) {
@@ -203,7 +205,8 @@ class _EntryDetailState extends State<EntryDetail> {
                           builder: (context, modified, _) {
                             return modified
                                 ? OutlinedButton(
-                                    child: const Text('保存'),
+                                    child: const Text('保存',
+                                        style: AppTextStyle.textButtonBlue),
                                     onPressed: () async {
                                       hideKeyboard(context);
                                       save();
@@ -215,240 +218,63 @@ class _EntryDetailState extends State<EntryDetail> {
                   ),
                 ),
                 Expanded(
-                  child: Stack(
+                  child: Column(
                     children: [
-                      ListView(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                      Row(
                         children: [
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          const Text(
-                            '用户名',
-                            style: AppTextStyle.textEntityItemTitle,
-                          ),
-                          TextHeadTailWrapper(
-                            textField: TextField(
-                              controller:
-                                  entryDetailController.userNameEditController,
-                              onTapOutside: (_) => hideKeyboard(context),
-                              enabled: hasExternalStoragePermission.value ||
-                                  !widget.keyFile.externalStore.value,
-                              style: AppTextStyle.textPrimary,
-                              decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.only(right: 50),
-                              ),
-                            ),
-                            tail: TextButton(
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(
-                                      text: entryDetailController
-                                          .userNameEditController.text));
-                                  Toast.show('已复制');
-                                },
-                                child: const Text(
-                                  '复制',
-                                  style: AppTextStyle.textButtonBlue,
-                                )),
-                          ),
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          const Text(
-                            '密码',
-                            style: AppTextStyle.textEntityItemTitle,
-                          ),
-                          TextHeadTailWrapper(
-                            textField: GestureDetector(
-                              onTap: () {
-                                if (hasExternalStoragePermission.value ||
-                                    !widget.keyFile.externalStore.value) {
-                                  hideKeyboard(context);
-                                  PasswordDialog(
-                                    onConfirm: (p) async {
-                                      entryDetailController.modifyPsw(
-                                          p, widget.entry);
-                                      return true;
-                                    },
-                                    title: '设置新密码',
-                                    useGenerator: true,
-                                  ).show(context);
-                                }
-                              },
-                              child: TextField(
-                                maxLines: null,
-                                controller:
-                                    entryDetailController.pswEditController,
-                                enabled: false,
-                                style: AppTextStyle.textPrimary,
-                                decoration: const InputDecoration(
-                                  contentPadding: EdgeInsets.only(right: 100),
-                                ),
-                              ),
-                            ),
-                            tail: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  behavior: HitTestBehavior.translucent,
-                                  onTapDown: (_) {
-                                    entryDetailController
-                                        .switchPswDisplay(false);
-                                  },
-                                  onTapUp: (_) {
-                                    entryDetailController
-                                        .switchPswDisplay(true);
-                                  },
-                                  onTapCancel: () {
-                                    entryDetailController
-                                        .switchPswDisplay(true);
-                                  },
-                                  onDoubleTap: () async {
-                                    entryDetailController
-                                        .switchPswDisplay(false);
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    height: 40,
-                                    child: const Center(
-                                      child: Text(
-                                        '查看',
-                                        style: AppTextStyle.textButtonBlue,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                TextButton(
-                                    onPressed: () async {
-                                      Clipboard.setData(ClipboardData(
-                                          text: entryDetailController.curPsw
-                                                  ?.getText() ??
-                                              ''));
-                                      Toast.show('已复制，10秒内有效！');
-                                      await Future.delayed(
-                                          const Duration(seconds: 10));
-                                      Clipboard.setData(
-                                          const ClipboardData(text: ''));
-                                    },
-                                    child: const Text(
-                                      '复制',
-                                      style: AppTextStyle.textButtonBlue,
-                                    )),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 16,
-                          ),
-                          const Text(
-                            '地址',
-                            style: AppTextStyle.textEntityItemTitle,
-                          ),
-                          TextHeadTailWrapper(
-                            textField: TextField(
-                              controller:
-                                  entryDetailController.urlEditController,
-                              enabled: hasExternalStoragePermission.value ||
-                                  !widget.keyFile.externalStore.value,
-                              onTapOutside: (_) => hideKeyboard(context),
-                              style: AppTextStyle.textPrimary,
-                              decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.only(right: 50),
-                              ),
-                            ),
-                            tail: TextButton(
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(
-                                      text: entryDetailController
-                                          .urlEditController.text));
-                                  Toast.show('已复制');
-                                },
-                                child: const Text(
-                                  '复制',
-                                  style: AppTextStyle.textButtonBlue,
-                                )),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          Row(
-                            children: [
-                              const Text(
-                                '备注',
-                                style: AppTextStyle.textEntityItemTitle,
-                              ),
-                              GestureDetector(
+                          Expanded(
+                              child: ValueListenableBuilder(
+                            valueListenable: _tab,
+                            builder: (_, tab, child) =>
+                                _infoTabBuilder(tab == 0, child!),
+                            child: GestureDetector(
+                                behavior: HitTestBehavior.translucent,
                                 onTap: () {
-                                  Clipboard.setData(ClipboardData(
-                                      text: entryDetailController
-                                          .noteEditController.text));
-                                  Toast.show('已复制');
+                                  _tab.value = 0;
                                 },
-                                child: const SizedBox(
-                                  width: 50,
-                                  height: 40,
-                                  child: Center(
-                                    child: Text(
-                                      '复制',
-                                      style: AppTextStyle.textButtonBlue,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                          TextField(
-                            controller:
-                                entryDetailController.noteEditController,
-                            enabled: hasExternalStoragePermission.value ||
-                                !widget.keyFile.externalStore.value,
-                            onTapOutside: (_) => hideKeyboard(context),
-                            style: AppTextStyle.textPrimary,
-                            maxLines: null,
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
+                                child: const Text('基础信息')),
+                          )),
+                          Expanded(
+                              child: ValueListenableBuilder(
+                            valueListenable: _tab,
+                            builder: (_, tab, child) =>
+                                _infoTabBuilder(tab == 1, child!),
+                            child: GestureDetector(
+                                behavior: HitTestBehavior.translucent,
+                                onTap: () {
+                                  _tab.value = 1;
+                                },
+                                child: const Text('附加信息')),
+                          )),
+                          Expanded(
+                              child: ValueListenableBuilder(
+                            valueListenable: _tab,
+                            builder: (_, tab, child) =>
+                                _infoTabBuilder(tab == 2, child!),
+                            child: GestureDetector(
+                                behavior: HitTestBehavior.translucent,
+                                onTap: () {
+                                  _tab.value = 2;
+                                },
+                                child: const Text('文件')),
+                          )),
                         ],
                       ),
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 20, // Adjust height as needed
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.entryBackground,
-                                AppColors.entryBackground.withAlpha(0)
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 20, // Adjust height as needed
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.entryBackground,
-                                AppColors.entryBackground.withAlpha(0)
-                              ],
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                            ),
-                          ),
-                        ),
-                      ),
+                      Expanded(
+                          child: ValueListenableBuilder(
+                              valueListenable: _tab,
+                              builder: (_, tab, __) => switch (_tab) {
+                                    0 => EntryBaseInfo(
+                                        controller: _entryDetailController,
+                                      ),
+                                    1 => EntryOtherInfo(
+                                        controller: _entryDetailController,
+                                      ),
+                                    2 => EntryFiles(
+                                        controller: _entryDetailController,
+                                      ),
+                                    _ => const SizedBox()
+                                  }))
                     ],
                   ),
                 ),
@@ -462,4 +288,13 @@ class _EntryDetailState extends State<EntryDetail> {
       ),
     );
   }
+
+  Widget _infoTabBuilder(bool selected, Widget child) =>
+      AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 150),
+        style: TextStyle(
+            color: selected ? AppColors.text0 : Colors.black54,
+            fontSize: selected ? 16 : 12),
+        child: child,
+      );
 }

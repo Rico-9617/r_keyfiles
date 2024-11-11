@@ -143,26 +143,21 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                                                       : Colors.transparent,
                                                   child: ValueListenableBuilder(
                                                     builder: (_, title, __) {
-                                                      return AnimatedContainer(
+                                                      return AnimatedDefaultTextStyle(
                                                         duration:
                                                             const Duration(
                                                                 milliseconds:
                                                                     150),
-                                                        transform:
-                                                            Matrix4.identity()
-                                                              ..scale(selected
-                                                                  ? 1.2
-                                                                  : 1.0),
-                                                        child: Text(
-                                                          title,
-                                                          style: TextStyle(
-                                                              color: selected
-                                                                  ? AppColors
-                                                                      .text0
-                                                                  : Colors
-                                                                      .black54,
-                                                              fontSize: 12),
-                                                        ),
+                                                        style: TextStyle(
+                                                            color: selected
+                                                                ? AppColors
+                                                                    .text0
+                                                                : Colors
+                                                                    .black54,
+                                                            fontSize: selected
+                                                                ? 16
+                                                                : 12),
+                                                        child: Text(title),
                                                       );
                                                     },
                                                     valueListenable: e.title,

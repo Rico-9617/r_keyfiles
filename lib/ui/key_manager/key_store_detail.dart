@@ -150,7 +150,6 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                           return;
                                         }
                                       }
-                                      logger.d(await getDocumentDirectory());
                                       try {
                                         final outputDir = Directory(p.join(
                                             await getDocumentDirectory(),
