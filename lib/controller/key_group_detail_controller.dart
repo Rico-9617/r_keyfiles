@@ -20,9 +20,13 @@ class KeyGroupDetailController {
   }
 
   Future<({KdbxEntryWrapper? entryWrapper, String? result})> createEntry(
-      String name, KdbxGroupWrapper groupWrapper, KdbxFileWrapper fileWrapper) async {
-    if (fileWrapper.kdbxFile == null) return (entryWrapper: null, result: '创建失败');
-    final newEntry = KdbxEntry.create(fileWrapper.kdbxFile!, groupWrapper.group);
+      String name,
+      KdbxGroupWrapper groupWrapper,
+      KdbxFileWrapper fileWrapper) async {
+    if (fileWrapper.kdbxFile == null)
+      return (entryWrapper: null, result: '创建失败');
+    final newEntry =
+        KdbxEntry.create(fileWrapper.kdbxFile!, groupWrapper.group);
     // group.group.addEntry(newEntry);
     newEntry.setString(KdbxKey('Title'), PlainValue(name));
     // final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
@@ -37,8 +41,8 @@ class KeyGroupDetailController {
     return (entryWrapper: entryWrapper, result: null);
   }
 
-  void recoverEntry(
-      KdbxEntryWrapper entryWrapper, KdbxGroupWrapper groupWrapper, KdbxFileWrapper keyFile) {
+  void recoverEntry(KdbxEntryWrapper entryWrapper,
+      KdbxGroupWrapper groupWrapper, KdbxFileWrapper keyFile) {
     if (keyFile.kdbxFile == null) return;
     // keyFile.kdbxFile?.deleteEntry(entry.entry);
     groupWrapper.entries.removeItem(entryWrapper);
@@ -46,7 +50,8 @@ class KeyGroupDetailController {
 
   Future<String?> deleteGroup(
       KdbxGroupWrapper groupWrapper, KdbxFileWrapper fileWrapper) async {
-    if (groupWrapper.parent == null || fileWrapper.kdbxFile == null) return '删除失败';
+    if (groupWrapper.parent == null || fileWrapper.kdbxFile == null)
+      return '删除失败';
     try {
       if (KeyStoreRepo.instance.isUnderRecycleBin(groupWrapper.parent!)) {
         //in recycle bin
@@ -66,8 +71,8 @@ class KeyGroupDetailController {
     return null;
   }
 
-   String?  clearRecycleBin(KdbxGroupWrapper groupWrapper){
-    try{
+  String? clearRecycleBin(KdbxGroupWrapper groupWrapper) {
+    try {
       for (var subGroupWrapper in groupWrapper.groups.value) {
         groupWrapper.group.file.deletePermanently(subGroupWrapper.group);
       }
@@ -77,7 +82,7 @@ class KeyGroupDetailController {
       }
       groupWrapper.entries.clearItems();
       return null;
-    }catch(e){
+    } catch (e) {
       logger.e(e);
     }
     return '清空失败';
@@ -88,11 +93,11 @@ class KeyGroupDetailController {
     KdbxGroupWrapper groupWrapper,
     KdbxFileWrapper fileWrapper,
   ) async {
-    if (fileWrapper.kdbxFile == null) return '修改失败';
     if (!groupWrapper.group.name.set(title)) return '修改失败';
     final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
     if (saveResult != null) return saveResult;
     if (groupWrapper.rootGroup) {
+      fileWrapper.title.value = title;
       await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
         data[0] = title;
         return data;

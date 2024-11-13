@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/styles.dart';
 
 class TipsDialog extends StatelessWidget {
@@ -10,7 +11,7 @@ class TipsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: AppColors.dialogContentBackground,
       width: 240,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(

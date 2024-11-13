@@ -64,7 +64,10 @@ class _EntryDetailState extends State<EntryDetail> {
                 tips: '内容有变更，是否保存?',
                 actions: [
                   TextButton(
-                    child: const Text('忽略'),
+                    child: const Text(
+                      '忽略',
+                      style: AppTextStyle.textButtonBlue,
+                    ),
                     onPressed: () {
                       Navigator.of(context).pop();
                       _entryDetailController.recover();
@@ -72,7 +75,10 @@ class _EntryDetailState extends State<EntryDetail> {
                     },
                   ),
                   TextButton(
-                    child: const Text('保存'),
+                    child: const Text(
+                      '保存',
+                      style: AppTextStyle.textButtonBlue,
+                    ),
                     onPressed: () async {
                       Navigator.of(context).pop();
                       if (await save() && mounted) {
@@ -137,7 +143,7 @@ class _EntryDetailState extends State<EntryDetail> {
                     children: [
                       if (!widget.keyFile.externalStore.value ||
                           hasExternalStoragePermission.value)
-                        OutlinedButton(
+                        TextButton(
                           child: const Text('修改名称',
                               style: AppTextStyle.textButtonBlue),
                           onPressed: () {
@@ -164,7 +170,7 @@ class _EntryDetailState extends State<EntryDetail> {
                         ),
                       if (!widget.keyFile.externalStore.value ||
                           hasExternalStoragePermission.value)
-                        OutlinedButton(
+                        TextButton(
                           child: const Text('删除',
                               style: AppTextStyle.textButtonBlue),
                           onPressed: () {
@@ -173,13 +179,19 @@ class _EntryDetailState extends State<EntryDetail> {
                                 builder: (_, __, ___, ____) =>
                                     TipsDialog(tips: '是否删除该密钥?', actions: [
                                       TextButton(
-                                        child: const Text('取消'),
+                                        child: const Text(
+                                          '取消',
+                                          style: AppTextStyle.textButtonBlue,
+                                        ),
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
                                       ),
                                       TextButton(
-                                        child: const Text('确定'),
+                                        child: const Text(
+                                          '确定',
+                                          style: AppTextStyle.textButtonBlue,
+                                        ),
                                         onPressed: () async {
                                           Navigator.of(context).pop();
                                           LoadingDialog.show();
@@ -204,7 +216,7 @@ class _EntryDetailState extends State<EntryDetail> {
                           valueListenable: widget.entry.modified,
                           builder: (context, modified, _) {
                             return modified
-                                ? OutlinedButton(
+                                ? TextButton(
                                     child: const Text('保存',
                                         style: AppTextStyle.textButtonBlue),
                                     onPressed: () async {
@@ -220,50 +232,53 @@ class _EntryDetailState extends State<EntryDetail> {
                 Expanded(
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                              child: ValueListenableBuilder(
-                            valueListenable: _tab,
-                            builder: (_, tab, child) =>
-                                _infoTabBuilder(tab == 0, child!),
-                            child: GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: () {
-                                  _tab.value = 0;
-                                },
-                                child: const Text('基础信息')),
-                          )),
-                          Expanded(
-                              child: ValueListenableBuilder(
-                            valueListenable: _tab,
-                            builder: (_, tab, child) =>
-                                _infoTabBuilder(tab == 1, child!),
-                            child: GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: () {
-                                  _tab.value = 1;
-                                },
-                                child: const Text('附加信息')),
-                          )),
-                          Expanded(
-                              child: ValueListenableBuilder(
-                            valueListenable: _tab,
-                            builder: (_, tab, child) =>
-                                _infoTabBuilder(tab == 2, child!),
-                            child: GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: () {
-                                  _tab.value = 2;
-                                },
-                                child: const Text('文件')),
-                          )),
-                        ],
+                      SizedBox(
+                        height: 40,
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: ValueListenableBuilder(
+                              valueListenable: _tab,
+                              builder: (_, tab, child) =>
+                                  _infoTabBuilder(tab == 0, child!),
+                              child: GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    _tab.value = 0;
+                                  },
+                                  child: const Center(child: Text('基础信息'))),
+                            )),
+                            Expanded(
+                                child: ValueListenableBuilder(
+                              valueListenable: _tab,
+                              builder: (_, tab, child) =>
+                                  _infoTabBuilder(tab == 1, child!),
+                              child: GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    _tab.value = 1;
+                                  },
+                                  child: const Center(child: Text('附加信息'))),
+                            )),
+                            Expanded(
+                                child: ValueListenableBuilder(
+                              valueListenable: _tab,
+                              builder: (_, tab, child) =>
+                                  _infoTabBuilder(tab == 2, child!),
+                              child: GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    _tab.value = 2;
+                                  },
+                                  child: const Center(child: Text('文件'))),
+                            )),
+                          ],
+                        ),
                       ),
                       Expanded(
                           child: ValueListenableBuilder(
                               valueListenable: _tab,
-                              builder: (_, tab, __) => switch (_tab) {
+                              builder: (_, tab, __) => switch (tab) {
                                     0 => EntryBaseInfo(
                                         controller: _entryDetailController,
                                       ),

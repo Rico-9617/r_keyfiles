@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:kdbx_lib/kdbx.dart';
 import 'package:r_backup_tool/foundation/list_value_notifier.dart';
-import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 
 class KdbxFileWrapper {
@@ -55,10 +54,5 @@ class KdbxEntryWrapper {
 
   KdbxEntryWrapper({required this.entry, this.parent, this.newEntry = false}) {
     title.value = entry.getString(KdbxKey('Title'));
-
-    for (var value1 in entry.binaryEntries) {
-      logger.d('checkentry binary $value1');
-    }
-    logger.d('checkentry tag ${entry.tags}');
   }
 }

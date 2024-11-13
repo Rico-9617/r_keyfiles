@@ -77,7 +77,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.dialogContentBackground,
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -121,81 +121,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                           0 => _buildLetterKeyboard(
                               _letterUpperCase, _textNotifier),
                           1 => _buildSymbolKeyboard(_textNotifier),
-                          2 => Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ValueListenableBuilder(
-                                    builder: (context, length, _) {
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '位数: $length',
-                                            style: AppTextStyle.textPrimary,
-                                          ),
-                                          Slider(
-                                            value: length.toDouble(),
-                                            min: 1,
-                                            max: 64,
-                                            divisions: 63,
-                                            label: length.toString(),
-                                            onChanged: (double value) {
-                                              _generateLength.value =
-                                                  value.toInt();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                    valueListenable: _generateLength,
-                                  ),
-                                  const SizedBox(
-                                    height: 12,
-                                  ),
-                                  ValueListenableBuilder(
-                                    builder: (_, scope, __) {
-                                      return Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          _buildGeneratorScopeSelector('小写字母',
-                                              _lower_case_letter, scope),
-                                          _buildGeneratorScopeSelector('大写字母',
-                                              _upper_case_letter, scope),
-                                          _buildGeneratorScopeSelector(
-                                              '数字', _number, scope),
-                                          _buildGeneratorScopeSelector(
-                                              '符号', _symbol, scope),
-                                        ],
-                                      );
-                                    },
-                                    valueListenable: _generateScope,
-                                  ),
-                                  const SizedBox(
-                                    height: 16,
-                                  ),
-                                  Center(
-                                      child: ValueListenableBuilder(
-                                    builder: (context, enabled, _) {
-                                      return ElevatedButton(
-                                          onPressed: enabled
-                                              ? () {
-                                                  _textNotifier.value =
-                                                      generate(
-                                                          _generateLength.value,
-                                                          _generateScope.value);
-                                                }
-                                              : null,
-                                          child: const Text('生成'));
-                                    },
-                                    valueListenable: _generateAvailable,
-                                  )),
-                                ],
-                              ),
-                            ),
+                          2 => _buildGeneratorKeyboard(),
                           _ => const SizedBox.shrink()
                         },
                       ),
@@ -207,10 +133,13 @@ class _PasswordDialogState extends State<PasswordDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              OutlinedButton(
+              TextButton(
                   onPressed: Navigator.of(context).pop,
-                  child: const Text('关闭')),
-              OutlinedButton(
+                  child: const Text(
+                    '关闭',
+                    style: AppTextStyle.textButtonBlue,
+                  )),
+              TextButton(
                   onPressed: () async {
                     if (_loading) return;
                     _loading = true;
@@ -229,14 +158,20 @@ class _PasswordDialogState extends State<PasswordDialog> {
                                 title: const Text('确认使用该密码？'),
                                 actions: [
                                   TextButton(
-                                    child: const Text('取消'),
+                                    child: const Text(
+                                      '取消',
+                                      style: AppTextStyle.textButtonBlue,
+                                    ),
                                     onPressed: () {
                                       _loading = false;
                                       Navigator.of(context).pop();
                                     },
                                   ),
                                   TextButton(
-                                    child: const Text('确定'),
+                                    child: const Text(
+                                      '确定',
+                                      style: AppTextStyle.textButtonBlue,
+                                    ),
                                     onPressed: () {
                                       Navigator.of(context).pop();
                                       callback();
@@ -248,12 +183,86 @@ class _PasswordDialogState extends State<PasswordDialog> {
                       await callback();
                     }
                   },
-                  child: const Text('确定')),
+                  child: const Text(
+                    '确定',
+                    style: AppTextStyle.textButtonBlue,
+                  )),
             ],
           ),
           SizedBox(
             height: 12 + MediaQuery.of(context).padding.bottom,
           ),
+        ],
+      ),
+    );
+  }
+
+  Padding _buildGeneratorKeyboard() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ValueListenableBuilder(
+            builder: (context, length, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '位数: $length',
+                    style: AppTextStyle.textPrimary,
+                  ),
+                  Slider(
+                    value: length.toDouble(),
+                    min: 1,
+                    max: 64,
+                    divisions: 63,
+                    label: length.toString(),
+                    onChanged: (double value) {
+                      _generateLength.value = value.toInt();
+                    },
+                  ),
+                ],
+              );
+            },
+            valueListenable: _generateLength,
+          ),
+          const SizedBox(
+            height: 12,
+          ),
+          ValueListenableBuilder(
+            builder: (_, scope, __) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildGeneratorScopeSelector(
+                      '小写字母', _lower_case_letter, scope),
+                  _buildGeneratorScopeSelector(
+                      '大写字母', _upper_case_letter, scope),
+                  _buildGeneratorScopeSelector('数字', _number, scope),
+                  _buildGeneratorScopeSelector('符号', _symbol, scope),
+                ],
+              );
+            },
+            valueListenable: _generateScope,
+          ),
+          const SizedBox(
+            height: 16,
+          ),
+          Center(
+              child: ValueListenableBuilder(
+            builder: (context, enabled, _) {
+              return ElevatedButton(
+                  onPressed: enabled
+                      ? () {
+                          _textNotifier.value = generate(
+                              _generateLength.value, _generateScope.value);
+                        }
+                      : null,
+                  child: const Text('生成'));
+            },
+            valueListenable: _generateAvailable,
+          )),
         ],
       ),
     );
@@ -296,7 +305,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
               onTapDown: (_) async => await vibrate(),
               child: Container(
                 alignment: Alignment.center,
-                color: Colors.blue.withAlpha(10),
+                color: AppColors.keyboardKey,
                 child: Text(
                   symbol,
                   style: AppTextStyle.textPrimary
@@ -330,7 +339,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                       },
                       onTapDown: (_) async => await vibrate(),
                       child: Container(
-                        color: Colors.blue.withAlpha(10),
+                        color: AppColors.keyboardKey,
                         alignment: Alignment.center,
                         child: ValueListenableBuilder(
                             valueListenable: letterUpperCase,
@@ -356,7 +365,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                       onTapDown: (_) async => await vibrate(),
                       child: Container(
                         alignment: Alignment.center,
-                        color: Colors.blue.withAlpha(10),
+                        color: AppColors.keyboardKey,
                         child: ValueListenableBuilder(
                             valueListenable: letterUpperCase,
                             builder: (_, upperCase, __) {

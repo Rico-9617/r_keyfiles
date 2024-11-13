@@ -5,6 +5,7 @@ import 'package:r_backup_tool/controller/key_entry_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/utils/tools.dart';
+import 'package:r_backup_tool/widgets/buttons.dart';
 
 class EntryOtherInfo extends StatelessWidget {
   final KeyEntryDetailController controller;
@@ -34,10 +35,7 @@ class EntryOtherInfo extends StatelessWidget {
                     width: 50,
                     height: 40,
                     child: Center(
-                      child: Text(
-                        '复制',
-                        style: AppTextStyle.textButtonBlue,
-                      ),
+                      child: copyButton,
                     ),
                   ),
                 )
@@ -50,6 +48,8 @@ class EntryOtherInfo extends StatelessWidget {
               onTapOutside: (_) => hideKeyboard(context),
               style: AppTextStyle.textPrimary,
               maxLines: 5,
+              minLines: 1,
+              expands: false,
               decoration: const InputDecoration(
                 contentPadding: EdgeInsets.zero,
               ),
@@ -73,10 +73,7 @@ class EntryOtherInfo extends StatelessWidget {
                     width: 50,
                     height: 40,
                     child: Center(
-                      child: Text(
-                        '复制',
-                        style: AppTextStyle.textButtonBlue,
-                      ),
+                      child: copyButton,
                     ),
                   ),
                 )

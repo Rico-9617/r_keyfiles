@@ -1,41 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:r_backup_tool/main.dart';
 
-class ClickableWidget extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback? onTap;
-  final EdgeInsetsGeometry? padding;
-  final double? width;
-  final double? height;
-  final Widget? child;
+import '../styles.dart';
 
-  const ClickableWidget(
-      {super.key,
-      this.enabled = true,
-      this.onTap,
-      this.padding,
-      this.width,
-      this.height,
-      this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final contentWidget = Container(
-      width: width,
-      height: height,
-      alignment: Alignment.center,
-      padding: padding,
-      child: child,
+Widget buildCopyButton(String data) => TextButton(
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: data));
+        Toast.show('已复制');
+      },
+      child: copyButton,
     );
 
-    return ClipRRect(
-        child: Material(
-      color: Colors.transparent,
-      child: enabled
-          ? InkWell(
-              onTap: onTap,
-              child: contentWidget,
-            )
-          : contentWidget,
-    ));
-  }
-}
+const copyButton = Text(
+  '复制',
+  style: AppTextStyle.textButtonBlue,
+);

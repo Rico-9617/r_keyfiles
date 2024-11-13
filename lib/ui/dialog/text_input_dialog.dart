@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/styles.dart';
 
 class TextInputDialog extends StatefulWidget {
@@ -38,7 +39,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
     return Container(
       width: 300,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.dialogContentBackground,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -66,13 +67,16 @@ class _TextInputDialogState extends State<TextInputDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              OutlinedButton(
+              TextButton(
                   onPressed: () {
                     FocusManager.instance.primaryFocus?.unfocus();
                     Navigator.of(context).pop();
                   },
-                  child: const Text('关闭')),
-              OutlinedButton(
+                  child: const Text(
+                    '关闭',
+                    style: AppTextStyle.textButtonBlue,
+                  )),
+              TextButton(
                   onPressed: () async {
                     if (_loading) return;
                     _loading = true;
@@ -83,7 +87,10 @@ class _TextInputDialogState extends State<TextInputDialog> {
                     }
                     _loading = false;
                   },
-                  child: const Text('确定')),
+                  child: const Text(
+                    '确定',
+                    style: AppTextStyle.textButtonBlue,
+                  )),
             ],
           ),
           const SizedBox(

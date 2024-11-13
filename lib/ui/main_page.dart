@@ -26,7 +26,7 @@ class MainPage extends StatelessWidget {
                 })),
         // Container(
         //   decoration: const BoxDecoration(
-        //     color: Colors.greenAccent,
+        //     color:  AppColors.mainTabBackground,
         //     boxShadow: [
         //       BoxShadow(
         //           color: Colors.black12,
@@ -43,7 +43,7 @@ class MainPage extends StatelessWidget {
         //   ),
         // ),
         Container(
-          color: Colors.greenAccent,
+          color: AppColors.mainTabBackground,
           height: MediaQuery.of(context).padding.bottom,
         ),
       ],

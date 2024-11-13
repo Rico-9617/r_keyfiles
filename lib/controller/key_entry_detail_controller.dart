@@ -78,7 +78,7 @@ class KeyEntryDetailController {
 
   Future<String?> saveChanges() async {
     if (keyFile.kdbxFile == null) return '保存失败，文件未解锁';
-    String? saveResult = null;
+    String? saveResult;
     final originTitle = entry.entry.getString(KdbxKey('Title'));
     final originNotes = entry.entry.getString(KdbxKey('Notes'));
     final originURL = entry.entry.getString(KdbxKey('URL'));
@@ -108,13 +108,16 @@ class KeyEntryDetailController {
       saveResult = '保存失败';
     }
     final deleteData = <String, KdbxBinary>{};
-    for (final delKey in deletedBinaries) {
-      deleteData[delKey] = entry.entry.getBinary(KdbxKey(delKey))!;
+    if (saveResult == null) {
+      for (final delKey in deletedBinaries) {
+        deleteData[delKey] = entry.entry.getBinary(KdbxKey(delKey))!;
+      }
+      if (entry.newEntry) {
+        entry.parent?.group.addEntry(entry.entry);
+      }
+      saveResult = await KeyStoreRepo.instance.saveKeyStore(keyFile);
     }
-    if (entry.newEntry) {
-      entry.parent?.group.addEntry(entry.entry);
-    }
-    saveResult = await KeyStoreRepo.instance.saveKeyStore(keyFile);
+
     if (saveResult != null) {
       entry.entry.setString(KdbxKey('Title'), originTitle);
       entry.entry.setString(KdbxKey('Notes'), originNotes);

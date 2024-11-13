@@ -6,6 +6,7 @@ import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/utils/tools.dart';
+import 'package:r_backup_tool/widgets/buttons.dart';
 import 'package:r_backup_tool/widgets/text_field_wrapper.dart';
 
 class EntryBaseInfo extends StatelessWidget {
@@ -35,16 +36,7 @@ class EntryBaseInfo extends StatelessWidget {
                   contentPadding: EdgeInsets.only(right: 50),
                 ),
               ),
-              tail: TextButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(
-                        text: controller.userNameEditController.text));
-                    Toast.show('已复制');
-                  },
-                  child: const Text(
-                    '复制',
-                    style: AppTextStyle.textButtonBlue,
-                  )),
+              tail: buildCopyButton(controller.userNameEditController.text),
             ),
             const SizedBox(
               height: 16,
@@ -115,10 +107,7 @@ class EntryBaseInfo extends StatelessWidget {
                         await Future.delayed(const Duration(seconds: 10));
                         Clipboard.setData(const ClipboardData(text: ''));
                       },
-                      child: const Text(
-                        '复制',
-                        style: AppTextStyle.textButtonBlue,
-                      )),
+                      child: copyButton),
                 ],
               ),
             ),
@@ -140,55 +129,7 @@ class EntryBaseInfo extends StatelessWidget {
                   contentPadding: EdgeInsets.only(right: 50),
                 ),
               ),
-              tail: TextButton(
-                  onPressed: () {
-                    Clipboard.setData(
-                        ClipboardData(text: controller.urlEditController.text));
-                    Toast.show('已复制');
-                  },
-                  child: const Text(
-                    '复制',
-                    style: AppTextStyle.textButtonBlue,
-                  )),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            Row(
-              children: [
-                const Text(
-                  '备注',
-                  style: AppTextStyle.textEntityItemTitle,
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(
-                        text: controller.noteEditController.text));
-                    Toast.show('已复制');
-                  },
-                  child: const SizedBox(
-                    width: 50,
-                    height: 40,
-                    child: Center(
-                      child: Text(
-                        '复制',
-                        style: AppTextStyle.textButtonBlue,
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-            TextField(
-              controller: controller.noteEditController,
-              enabled: hasExternalStoragePermission.value ||
-                  !controller.keyFile.externalStore.value,
-              onTapOutside: (_) => hideKeyboard(context),
-              style: AppTextStyle.textPrimary,
-              maxLines: null,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.zero,
-              ),
+              tail: buildCopyButton(controller.urlEditController.text),
             ),
           ],
         ),

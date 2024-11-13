@@ -17,18 +17,24 @@ class EntryFiles extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Align(
-          alignment: Alignment.topRight,
-          child: TextButton(
-            child: const Text('添加'),
-            onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles();
-              if (result != null) {
-                controller.addBinary(result.files.single.path!);
-              }
-            },
+        if (hasExternalStoragePermission.value ||
+            !controller.keyFile.externalStore.value)
+          Align(
+            alignment: Alignment.topRight,
+            child: TextButton(
+              child: const Text(
+                '添加',
+                style: AppTextStyle.textButtonBlue,
+              ),
+              onPressed: () async {
+                FilePickerResult? result =
+                    await FilePicker.platform.pickFiles();
+                if (result != null) {
+                  controller.addBinary(result.files.single.path!);
+                }
+              },
+            ),
           ),
-        ),
         Expanded(
           child: Stack(
             children: [
@@ -45,8 +51,8 @@ class EntryFiles extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.only(
                                 left: 16,
-                                top: 12,
-                                bottom: 12,
+                                top: 8,
+                                bottom: 8,
                               ),
                               child: Row(
                                 children: [
@@ -77,40 +83,57 @@ class EntryFiles extends StatelessWidget {
                                         '导出',
                                         style: AppTextStyle.textButtonBlue,
                                       )),
-                                  TextButton(
-                                      onPressed: () {
-                                        showCenterDialog(context,
-                                            builder: (_, __, ___, ____) =>
-                                                TipsDialog(
-                                                    tips: '是否删除该文件?',
-                                                    actions: [
-                                                      TextButton(
-                                                        child: const Text('取消'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child: const Text('确定'),
-                                                        onPressed: () async {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          controller
-                                                              .deleteBinary(
-                                                                  item);
-                                                        },
-                                                      ),
-                                                    ]));
-                                      },
-                                      child: const Text(
-                                        '删除',
-                                        style: AppTextStyle.textButtonBlue,
-                                      )),
+                                  if (hasExternalStoragePermission.value ||
+                                      !controller.keyFile.externalStore.value)
+                                    TextButton(
+                                        onPressed: () {
+                                          showCenterDialog(context,
+                                              builder: (_, __, ___, ____) =>
+                                                  TipsDialog(
+                                                      tips: '是否删除该文件?',
+                                                      actions: [
+                                                        TextButton(
+                                                          child: const Text(
+                                                            '取消',
+                                                            style: AppTextStyle
+                                                                .textButtonBlue,
+                                                          ),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                        ),
+                                                        TextButton(
+                                                          child: const Text(
+                                                            '确定',
+                                                            style: AppTextStyle
+                                                                .textButtonBlue,
+                                                          ),
+                                                          onPressed: () async {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                            controller
+                                                                .deleteBinary(
+                                                                    item);
+                                                          },
+                                                        ),
+                                                      ]));
+                                        },
+                                        child: const Text(
+                                          '删除',
+                                          style: AppTextStyle.textButtonBlue,
+                                        )),
                                 ],
                               ),
                             ),
-                            const Divider(),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Divider(
+                                height: 1,
+                              ),
+                            ),
                           ],
                         );
                       });

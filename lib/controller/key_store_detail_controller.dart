@@ -71,21 +71,6 @@ class KeyStoreDetailController {
     return null;
   }
 
-  Future<String?> modifyKeyStoreTitle(
-      KdbxFileWrapper fileWrapper, String title) async {
-    if (fileWrapper.kdbxFile == null) return '修改失败';
-    if (!fileWrapper.kdbxFile!.body.rootGroup.name.set(title)) return '修改失败';
-    final saveResult = await KeyStoreRepo.instance.saveKeyStore(fileWrapper);
-    if (saveResult != null) return saveResult;
-
-    await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-      data[0] = title;
-      return data;
-    });
-    fileWrapper.title.value = title;
-    return null;
-  }
-
   Future<String?> importExternalKeyStore(
       KdbxFileWrapper fileWrapper, String psw) async {
     try {

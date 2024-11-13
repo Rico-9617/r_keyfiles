@@ -70,7 +70,7 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: ValueListenableBuilder(
                       valueListenable: widget.keyFile.externalStore,
                       builder: (_, isExternal, child) {
@@ -184,13 +184,19 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                 builder: (_, __, ___, ____) =>
                                     TipsDialog(tips: '是否删除该文件?', actions: [
                                       TextButton(
-                                        child: const Text('取消'),
+                                        child: const Text(
+                                          '取消',
+                                          style: AppTextStyle.textButtonBlue,
+                                        ),
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
                                       ),
                                       TextButton(
-                                        child: const Text('确定'),
+                                        child: const Text(
+                                          '确定',
+                                          style: AppTextStyle.textButtonBlue,
+                                        ),
                                         onPressed: () async {
                                           Navigator.of(context).pop();
                                           LoadingDialog.show();
