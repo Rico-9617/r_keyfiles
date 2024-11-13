@@ -7,6 +7,7 @@ import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/utils/encrypt_tool.dart';
+import 'package:r_backup_tool/utils/native_tool.dart';
 
 class KeyStoreDetailController {
   const KeyStoreDetailController();
@@ -103,5 +104,23 @@ class KeyStoreDetailController {
 
   deleteKeyStore(KdbxFileWrapper fileWrapper) async {
     await KeyStoreRepo.instance.deleteKeyStore(fileWrapper);
+  }
+
+  Future<String?> exportKeyStore(KdbxFileWrapper fileWrapper) async {
+    try {
+      final outputDir =
+          Directory(p.join(await getDocumentDirectory(), 'key_backup'));
+      if (!await outputDir.exists()) {
+        await outputDir.create();
+      }
+      final outputFile =
+          File(p.join(outputDir.path, '${fileWrapper.title}.kdbx'));
+      await outputFile.writeAsBytes(await fileWrapper.kdbxFile!.save(),
+          flush: true);
+      return null;
+    } catch (e) {
+      logger.e(e);
+    }
+    return '导出失败';
   }
 }

@@ -301,60 +301,66 @@ class _GroupDetailState extends State<GroupDetail> {
                                           '删除该组',
                                           style: AppTextStyle.textButtonBlue,
                                         )),
-                                  TextButton(
-                                      onPressed: () {
-                                        showCenterDialog(context,
-                                            builder: (_, __, ___, ____) =>
-                                                TipsDialog(
-                                                    tips: '是否清空回收站（无法恢复）?',
-                                                    actions: [
-                                                      TextButton(
-                                                        child: const Text(
-                                                          '取消',
-                                                          style: AppTextStyle
-                                                              .textButtonBlue,
+                                  if (widget.group.recycleBin)
+                                    TextButton(
+                                        onPressed: () {
+                                          showCenterDialog(context,
+                                              builder: (_, __, ___, ____) =>
+                                                  TipsDialog(
+                                                      tips: '是否清空回收站（无法恢复）?',
+                                                      actions: [
+                                                        TextButton(
+                                                          child: const Text(
+                                                            '取消',
+                                                            style: AppTextStyle
+                                                                .textButtonBlue,
+                                                          ),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
                                                         ),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child: const Text(
-                                                          '确定',
-                                                          style: AppTextStyle
-                                                              .textButtonBlue,
-                                                        ),
-                                                        onPressed: () async {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          LoadingDialog.show();
-                                                          final result =
-                                                              groupController
-                                                                  .clearRecycleBin(
-                                                                      widget
-                                                                          .group);
-                                                          LoadingDialog
-                                                              .dismiss();
-                                                          if (result != null &&
-                                                              result
-                                                                  .isNotEmpty) {
-                                                            Toast.show(result);
-                                                          } else {
-                                                            if (mounted) {
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
+                                                        TextButton(
+                                                          child: const Text(
+                                                            '确定',
+                                                            style: AppTextStyle
+                                                                .textButtonBlue,
+                                                          ),
+                                                          onPressed: () async {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                            LoadingDialog
+                                                                .show();
+                                                            final result =
+                                                                groupController
+                                                                    .clearRecycleBin(
+                                                                        widget
+                                                                            .group);
+                                                            LoadingDialog
+                                                                .dismiss();
+                                                            if (result !=
+                                                                    null &&
+                                                                result
+                                                                    .isNotEmpty) {
+                                                              Toast.show(
+                                                                  result);
+                                                            } else {
+                                                              if (mounted) {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              }
                                                             }
-                                                          }
-                                                        },
-                                                      ),
-                                                    ]));
-                                      },
-                                      child: const Text(
-                                        '清空',
-                                        style: AppTextStyle.textButtonBlue,
-                                      )),
+                                                          },
+                                                        ),
+                                                      ]));
+                                        },
+                                        child: const Text(
+                                          '清空',
+                                          style: AppTextStyle.textButtonBlue,
+                                        )),
                                 ]));
                       },
                       valueListenable: widget.keyFile.externalStore,

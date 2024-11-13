@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:r_backup_tool/controller/key_store_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
@@ -150,22 +149,13 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                           return;
                                         }
                                       }
-                                      try {
-                                        final outputDir = Directory(p.join(
-                                            await getDocumentDirectory(),
-                                            'key_backup'));
-                                        if (!await outputDir.exists()) {
-                                          await outputDir.create();
-                                        }
-                                        final outputFile = File(p.join(
-                                            outputDir.path,
-                                            '${widget.keyFile.title}.kdbx'));
-                                        await outputFile.writeAsBytes(
-                                            await widget.keyFile.kdbxFile!
-                                                .save(),
-                                            flush: true);
-                                      } catch (e) {
-                                        logger.e(e);
+                                      LoadingDialog.show();
+                                      final result = await widget
+                                          .detailController
+                                          .exportKeyStore(widget.keyFile);
+                                      LoadingDialog.dismiss();
+                                      if (result != null) {
+                                        Toast.show(result);
                                       }
                                     },
                                     child: const Text(
