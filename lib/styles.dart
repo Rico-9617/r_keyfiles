@@ -8,8 +8,8 @@ class AppTextStyle {
       TextStyle(color: AppColors.textTitle, fontSize: 14);
   static const TextStyle textButtonBlue =
       TextStyle(color: AppColors.textClick, fontSize: 12);
-  static const TextStyle textEntityTitle = TextStyle(
-      color: AppColors.text0, fontSize: 18, fontWeight: FontWeight.w500);
+  static const TextStyle textItemTitle = TextStyle(
+      color: AppColors.textTitle, fontSize: 18, fontWeight: FontWeight.w500);
   static const TextStyle textEntityItemTitle = TextStyle(
       color: AppColors.text0, fontSize: 16, fontWeight: FontWeight.w500);
   static const TextStyle textPrimary =

@@ -57,6 +57,7 @@ class _GroupDetailState extends State<GroupDetail> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: Container(
+                  color: AppColors.groupItemBackground,
                   padding: widget.individual
                       ? EdgeInsets.only(top: MediaQuery.of(context).padding.top)
                       : EdgeInsets.zero,
@@ -68,14 +69,17 @@ class _GroupDetailState extends State<GroupDetail> {
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            icon: const Icon(Icons.close)),
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textTitle,
+                            )),
                       Expanded(
                           child: ValueListenableBuilder(
                               valueListenable: widget.group.title,
                               builder: (_, title, __) {
                                 return Text(
                                   title,
-                                  style: AppTextStyle.textEntityTitle,
+                                  style: AppTextStyle.textItemTitle,
                                 );
                               })),
                     ],
@@ -388,29 +392,40 @@ class _GroupDetailState extends State<GroupDetail> {
                                 return Hero(
                                   tag: heroTag,
                                   child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 4, vertical: 4),
-                                      decoration: const BoxDecoration(
-                                          color: AppColors.groupItemBackground,
-                                          boxShadow: [
-                                            BoxShadow(
-                                                color: Colors.black12,
-                                                offset: Offset(0.0, 1.0),
-                                                spreadRadius: 1,
-                                                blurRadius: 1)
-                                          ]),
-                                      child: ValueListenableBuilder(
-                                        builder: (_, title, __) {
-                                          return Text(
-                                            title,
-                                            style: AppTextStyle.textPrimary
-                                                .copyWith(fontSize: 12),
-                                          );
-                                        },
-                                        valueListenable: e.title,
-                                      )),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4, vertical: 4),
+                                    decoration: const BoxDecoration(
+                                        color: AppColors.groupBackground,
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black12,
+                                              offset: Offset(0.0, 1.0),
+                                              spreadRadius: 1,
+                                              blurRadius: 1)
+                                        ]),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 4),
+                                            color:
+                                                AppColors.groupItemBackground,
+                                            height: 30,
+                                            alignment: Alignment.center,
+                                            child: ValueListenableBuilder(
+                                              builder: (_, title, __) {
+                                                return Text(
+                                                  title,
+                                                  style: AppTextStyle
+                                                      .textItemTitle
+                                                      .copyWith(fontSize: 12),
+                                                );
+                                              },
+                                              valueListenable: e.title,
+                                            )),
+                                      ],
+                                    ),
+                                  ),
                                 );
                               }).toList()),
                         )),
@@ -441,12 +456,8 @@ class _GroupDetailState extends State<GroupDetail> {
                                   child: Container(
                                     margin: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 4),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    height: 50,
-                                    alignment: Alignment.centerLeft,
                                     decoration: const BoxDecoration(
-                                      color: AppColors.entryItemBackground,
+                                      color: AppColors.entryBackground,
                                       boxShadow: [
                                         BoxShadow(
                                             color: Colors.black12,
@@ -455,17 +466,29 @@ class _GroupDetailState extends State<GroupDetail> {
                                             blurRadius: 2)
                                       ],
                                     ),
-                                    child: Row(
+                                    child: Column(
                                       children: [
-                                        ValueListenableBuilder(
-                                            valueListenable: item.title,
-                                            builder: (_, title, __) {
-                                              return Text(
-                                                title?.getText() ?? 'unnamed',
-                                                style: AppTextStyle
-                                                    .textEntityTitle,
-                                              );
-                                            }),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                          height: 50,
+                                          alignment: Alignment.centerLeft,
+                                          color: AppColors.entryItemBackground,
+                                          child: Row(
+                                            children: [
+                                              ValueListenableBuilder(
+                                                  valueListenable: item.title,
+                                                  builder: (_, title, __) {
+                                                    return Text(
+                                                      title?.getText() ??
+                                                          'unnamed',
+                                                      style: AppTextStyle
+                                                          .textItemTitle,
+                                                    );
+                                                  }),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),

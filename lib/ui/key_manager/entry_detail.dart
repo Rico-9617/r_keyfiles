@@ -102,18 +102,28 @@ class _EntryDetailState extends State<EntryDetail> {
         onClickBack();
       },
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: Hero(
           tag: widget.heroTag,
           child: Container(
-            color: AppColors.entryBackground,
+            decoration: const BoxDecoration(
+                color: AppColors.entryBackground,
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      offset: Offset(0.0, 1.0),
+                      spreadRadius: 2,
+                      blurRadius: 1)
+                ]),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: MediaQuery.of(context).padding.top,
-                ),
                 Container(
-                  constraints: const BoxConstraints(minHeight: 40),
+                  color: AppColors.entryItemBackground,
+                  padding:
+                      EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+                  constraints: BoxConstraints(
+                      minHeight: 40 + MediaQuery.of(context).padding.top),
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
@@ -121,14 +131,17 @@ class _EntryDetailState extends State<EntryDetail> {
                           onPressed: () {
                             onClickBack();
                           },
-                          icon: const Icon(Icons.close)),
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppColors.textTitle,
+                          )),
                       Expanded(
                         child: ValueListenableBuilder(
                             valueListenable: widget.entry.title,
                             builder: (_, title, __) {
                               return Text(
                                 title?.getText() ?? 'unnamed',
-                                style: AppTextStyle.textEntityTitle,
+                                style: AppTextStyle.textItemTitle,
                               );
                             }),
                       ),
