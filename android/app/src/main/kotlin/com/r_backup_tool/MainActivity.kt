@@ -2,15 +2,26 @@ package com.r_backup_tool
 
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import kotlin.random.Random
 
 class MainActivity : FlutterActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            installSplashScreen()
+        } else {
+            setTheme(R.style.NormalTheme)
+        }
+        super.onCreate(savedInstanceState)
+    }
 
     private val callbackMap = hashMapOf<Int, MethodChannel.Result>();
 
