@@ -410,7 +410,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                                 horizontal: 8, vertical: 4),
                                             color:
                                                 AppColors.groupItemBackground,
-                                            height: 30,
+                                            height: 35,
                                             alignment: Alignment.center,
                                             child: ValueListenableBuilder(
                                               builder: (_, title, __) {
@@ -418,7 +418,9 @@ class _GroupDetailState extends State<GroupDetail> {
                                                   title,
                                                   style: AppTextStyle
                                                       .textItemTitle
-                                                      .copyWith(fontSize: 12),
+                                                      .copyWith(
+                                                          fontSize: AppTextStyle
+                                                              .text_normal),
                                                 );
                                               },
                                               valueListenable: e.title,
@@ -430,105 +432,70 @@ class _GroupDetailState extends State<GroupDetail> {
                               }).toList()),
                         )),
               Expanded(
-                child: Stack(
-                  children: [
-                    ValueListenableBuilder(
-                        valueListenable: widget.group.entries,
-                        builder: (_, entries, __) {
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            itemCount: entries.length,
-                            itemBuilder: (context, index) {
-                              final item = entries[index];
-                              final heroTag = 'key_title_${item.hashCode}';
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context)
-                                      .push(buildTransparentPageRoute(
-                                    EntryDetail(
-                                        keyFile: widget.keyFile,
-                                        entry: item,
-                                        heroTag: heroTag),
-                                  ));
-                                },
-                                child: Hero(
-                                  tag: heroTag,
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 4),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.entryBackground,
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: Colors.black12,
-                                            offset: Offset(0.0, 1.0),
-                                            spreadRadius: 1,
-                                            blurRadius: 2)
-                                      ],
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          height: 50,
-                                          alignment: Alignment.centerLeft,
-                                          color: AppColors.entryItemBackground,
-                                          child: Row(
-                                            children: [
-                                              ValueListenableBuilder(
-                                                  valueListenable: item.title,
-                                                  builder: (_, title, __) {
-                                                    return Text(
-                                                      title?.getText() ??
-                                                          'unnamed',
-                                                      style: AppTextStyle
-                                                          .textItemTitle,
-                                                    );
-                                                  }),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
+                child: ValueListenableBuilder(
+                    valueListenable: widget.group.entries,
+                    builder: (_, entries, __) {
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        itemCount: entries.length,
+                        itemBuilder: (context, index) {
+                          final item = entries[index];
+                          final heroTag = 'key_title_${item.hashCode}';
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(buildTransparentPageRoute(
+                                EntryDetail(
+                                    keyFile: widget.keyFile,
+                                    entry: item,
+                                    heroTag: heroTag),
+                              ));
                             },
+                            child: Hero(
+                              tag: heroTag,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.entryBackground,
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black12,
+                                        offset: Offset(0.0, 1.0),
+                                        spreadRadius: 1,
+                                        blurRadius: 2)
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      height: 50,
+                                      alignment: Alignment.centerLeft,
+                                      color: AppColors.entryItemBackground,
+                                      child: Row(
+                                        children: [
+                                          ValueListenableBuilder(
+                                              valueListenable: item.title,
+                                              builder: (_, title, __) {
+                                                return Text(
+                                                  title?.getText() ?? 'unnamed',
+                                                  style: AppTextStyle
+                                                      .textItemTitle,
+                                                );
+                                              }),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           );
-                        }),
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 20, // Adjust height as needed
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [background, background.withAlpha(0)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 20, // Adjust height as needed
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [background, background.withAlpha(0)],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                        },
+                      );
+                    }),
               )
             ],
           ),

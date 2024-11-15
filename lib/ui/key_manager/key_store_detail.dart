@@ -5,10 +5,10 @@ import 'package:r_backup_tool/controller/key_store_detail_controller.dart';
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/styles.dart';
+import 'package:r_backup_tool/ui/dialog/dialogs.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
 import 'package:r_backup_tool/ui/key_manager/group_detail.dart';
-import 'package:r_backup_tool/utils/native_tool.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
 
 class KeyStoreDetail extends StatefulWidget {
@@ -76,6 +76,15 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                         return ValueListenableBuilder(
                           builder: (_, hasStoragePermission, __) {
                             return Wrap(spacing: 8, runSpacing: 4, children: [
+                              TextButton(
+                                  onPressed: () {
+                                    widget.detailController
+                                        .lockFile(widget.keyFile);
+                                  },
+                                  child: const Text(
+                                    '锁定',
+                                    style: AppTextStyle.textButtonBlue,
+                                  )),
                               if (isExternal && !hasStoragePermission)
                                 TextButton(
                                     onPressed: () {
@@ -101,12 +110,8 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                     )),
                               if (isExternal && !hasStoragePermission)
                                 TextButton(
-                                    onPressed: () async {
-                                      final result =
-                                          await requestStoragePermission();
-                                      if (result == false) {
-                                        Toast.show('授权失败，请前往系统设置授权');
-                                      }
+                                    onPressed: () {
+                                      showStoragePermissionDialog(context);
                                     },
                                     child: const Text(
                                       '授权以编辑',
@@ -141,13 +146,8 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                 TextButton(
                                     onPressed: () async {
                                       if (!hasStoragePermission) {
-                                        final result =
-                                            await requestStoragePermission();
-                                        if (result == false) {
-                                          Toast.show(
-                                              '无外部存储权限，无法导出文件，请前往系统设置授权');
-                                          return;
-                                        }
+                                        showStoragePermissionDialog(context);
+                                        return;
                                       }
                                       LoadingDialog.show();
                                       final result = await widget

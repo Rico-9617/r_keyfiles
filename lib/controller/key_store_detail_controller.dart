@@ -17,7 +17,6 @@ class KeyStoreDetailController {
     Future<void> parse() async {
       try {
         final path = EncryptTool.decrypt(fileWrapper.path, psw);
-        logger.d('testfiles   $path ');
         if (path == null) {
           streamController.addError('密码错误!');
           streamController.add(false);
@@ -52,6 +51,20 @@ class KeyStoreDetailController {
     return streamController.stream;
   }
 
+  lockFile(KdbxFileWrapper fileWrapper) async {
+    fileWrapper.encrypted.value = true;
+    final savedList = await KeyStoreRepo.instance.getSavedFiles();
+    for (int index = 0; index < savedList.length; index++) {
+      final arr = savedList[index].split('@');
+      if (arr[2] == fileWrapper.id) {
+        fileWrapper.path = arr[3];
+        break;
+      }
+    }
+    fileWrapper.rootGroup = null;
+    fileWrapper.kdbxFile = null;
+  }
+
   Future<String?> modifyKeyFilePassword(
       KdbxFileWrapper fileWrapper, String psw) async {
     if (fileWrapper.kdbxFile == null) return '文件未解锁';
@@ -79,11 +92,11 @@ class KeyStoreDetailController {
       File internalFile = File(p.join(folder, fileWrapper.title.value));
       while (await internalFile.exists()) {
         internalFile = File(p.join(folder,
-            '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}'));
+            '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}.kdbx'));
       }
       await File(fileWrapper.path).copy(internalFile.path);
       await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-        final result = EncryptTool.encrypt(fileWrapper.path, psw);
+        final result = EncryptTool.encrypt(internalFile.path, psw);
         if (result == null) {
           throw Exception();
         } else {
@@ -109,12 +122,12 @@ class KeyStoreDetailController {
   Future<String?> exportKeyStore(KdbxFileWrapper fileWrapper) async {
     try {
       final outputDir =
-          Directory(p.join(await getDocumentDirectory(), 'key_backup'));
+          Directory(p.join((await getDownloadDirectory()), 'key_backup'));
       if (!await outputDir.exists()) {
         await outputDir.create();
       }
       final outputFile =
-          File(p.join(outputDir.path, '${fileWrapper.title}.kdbx'));
+          File(p.join(outputDir.path, '${fileWrapper.title.value}.kdbx'));
       await outputFile.writeAsBytes(await fileWrapper.kdbxFile!.save(),
           flush: true);
       return null;

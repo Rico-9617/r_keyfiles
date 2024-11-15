@@ -27,7 +27,6 @@ class KeyStoreRepo {
 
   loadSavedFiles() async {
     final savedFiles = await getSavedFiles();
-    logger.d(savedFiles);
     if (savedFiles.isEmpty) return;
     savedKeyFiles.value = List.generate(savedFiles.length, (index) {
       final item = savedFiles[index].toString().split('@');

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:logger/logger.dart';
+import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/main_page.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 
@@ -38,6 +40,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await FlutterWindowManagerPlus.addFlags(
+          FlutterWindowManagerPlus.FLAG_SECURE);
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -272,8 +283,9 @@ class _ToastState extends State<Toast> with SingleTickerProviderStateMixin {
                       decoration: const BoxDecoration(color: Colors.black87),
                       child: Text(
                         toastText,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: AppTextStyle.text_normal),
                       ),
                     ),
                   ),

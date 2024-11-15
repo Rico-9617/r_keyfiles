@@ -9,6 +9,8 @@ import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:vibration/vibration.dart';
 
+const double keyFontSize = 14;
+
 class PasswordDialog extends StatefulWidget {
   static const _keyboardLetterData = '1234567890abcdefghijklmnopqrstuvwxyz---^';
   static const _keyboardSymbolData = r'!@#$%^&*()`~-_=+[{]};:’”\|,<.>/?';
@@ -280,7 +282,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
       },
       child: Text(text,
           style: TextStyle(
-              fontSize: 12,
+              fontSize: 14,
               color: scope & value == 0
                   ? AppColors.textDisable
                   : AppColors.text0)),
@@ -351,7 +353,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                                   _ => '',
                                 },
                                 style: AppTextStyle.textPrimary
-                                    .copyWith(fontSize: 12),
+                                    .copyWith(fontSize: keyFontSize),
                               );
                             }),
                       ),
@@ -390,11 +392,14 @@ class _PasswordDialogState extends State<PasswordDialog> {
         child: Container(
           height: 35,
           alignment: Alignment.center,
-          child: Text(
-            title,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
             style: index == value
                 ? AppTextStyle.textPrimary
                 : AppTextStyle.textDisable,
+            child: Text(
+              title,
+            ),
           ),
         ),
       ),
@@ -422,7 +427,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                     builder: (_, encrypt, __) => Text(
                           encrypt ? text.replaceAll(RegExp(r'.'), '*') : text,
                           style: const TextStyle(
-                              color: AppColors.text0, fontSize: 18),
+                              color: AppColors.text0, fontSize: 20),
                           textAlign: TextAlign.center,
                         ))),
           ),

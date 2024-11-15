@@ -16,7 +16,6 @@
     <application
         android:label="@string/launcher"
         android:name="${applicationName}"
-        android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

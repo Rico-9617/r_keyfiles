@@ -322,7 +322,9 @@ class _EntryDetailState extends State<EntryDetail> {
         duration: const Duration(milliseconds: 150),
         style: TextStyle(
             color: selected ? AppColors.text0 : Colors.black54,
-            fontSize: selected ? 16 : 12),
+            fontSize: selected
+                ? AppTextStyle.text_tab_selected
+                : AppTextStyle.text_tab),
         child: child,
       );
 }

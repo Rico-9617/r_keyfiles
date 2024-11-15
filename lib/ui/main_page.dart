@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:r_backup_tool/colors.dart';
+import 'package:r_backup_tool/styles.dart';
 
 import 'contacts/contacts_tab_page.dart';
 import 'key_manager/key_manager_tab_page.dart';
@@ -71,7 +72,9 @@ class MainPage extends StatelessWidget {
                     style: TextStyle(
                         color:
                             selected ? AppColors.text0 : AppColors.textDisable,
-                        fontSize: selected ? 14 : 12),
+                        fontSize: selected
+                            ? AppTextStyle.text_tab_selected
+                            : AppTextStyle.text_tab),
                   ),
                 );
               }),
