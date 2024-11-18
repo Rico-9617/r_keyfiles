@@ -81,7 +81,7 @@ class KeyStoreRepo {
         break;
       }
     }
-    saveFiles(savedFiles);
+    await saveFiles(savedFiles);
 
     if (!fileWrapper.externalStore.value) {
       final file = File(fileWrapper.path);
@@ -105,10 +105,10 @@ class KeyStoreRepo {
         : String.fromCharCodes(await conf.readAsBytes()).split('<kf>');
   }
 
-  saveFiles(List<String> dataList) async {
+  Future saveFiles(List<String> dataList) async {
     final conf = await LocalRepo.instance.getConfigFile(name: '.ks');
     dataList.removeWhere((e) => e.isEmpty);
-    conf.writeAsBytes(dataList.join('<kf>').codeUnits, flush: true);
+    await conf.writeAsBytes(dataList.join('<kf>').codeUnits, flush: true);
   }
 
   updateSavedFiles(KdbxFileWrapper fileWrapper,
@@ -118,7 +118,7 @@ class KeyStoreRepo {
       final arr = savedList[index].split('@');
       if (arr[2] == fileWrapper.id) {
         savedList[index] = onUpdate(arr).join('@');
-        KeyStoreRepo.instance.saveFiles(savedList);
+        await KeyStoreRepo.instance.saveFiles(savedList);
         break;
       }
     }

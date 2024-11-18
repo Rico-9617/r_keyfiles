@@ -89,7 +89,8 @@ class KeyStoreDetailController {
       KdbxFileWrapper fileWrapper, String psw) async {
     try {
       final folder = (await KeyStoreRepo.instance.getInternalFolder()).path;
-      File internalFile = File(p.join(folder, fileWrapper.title.value));
+      File internalFile =
+          File(p.join(folder, '${fileWrapper.title.value}.kdbx'));
       while (await internalFile.exists()) {
         internalFile = File(p.join(folder,
             '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}.kdbx'));
@@ -102,7 +103,7 @@ class KeyStoreDetailController {
         } else {
           data[3] = result;
         }
-        data[1] = 'false';
+        data[1] = false.toString();
         return data;
       });
       fileWrapper.path = internalFile.path;

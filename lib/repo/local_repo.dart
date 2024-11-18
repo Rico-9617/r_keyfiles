@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:r_backup_tool/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalRepo {
@@ -23,7 +22,6 @@ class LocalRepo {
   static Future<Directory> _getConfigFolder() async {
     final directory = Directory(
         p.join((await getApplicationDocumentsDirectory()).path, '.app_conf'));
-    logger.d(directory);
     if (!await directory.exists()) {
       await directory.create();
     }

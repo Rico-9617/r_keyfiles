@@ -29,7 +29,7 @@ class KeyFileController {
       final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
       savedFiles.add(
           '${data.title.value}@$externalFile@${const Uuid().v4()}@${EncryptTool.encrypt(data.path, psw)}');
-      KeyStoreRepo.instance.saveFiles(savedFiles);
+      await KeyStoreRepo.instance.saveFiles(savedFiles);
 
       KeyStoreRepo.instance.savedKeyFiles.addItem(data);
       KeyStoreRepo.instance.currentFile.value = data;
@@ -60,7 +60,7 @@ class KeyFileController {
       final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
       savedFiles.add(
           '$name@false@${wrapper.id}@${EncryptTool.encrypt(wrapper.path, psw)}');
-      KeyStoreRepo.instance.saveFiles(savedFiles);
+      await KeyStoreRepo.instance.saveFiles(savedFiles);
       wrapper.title.value = name;
       wrapper.rootGroup =
           KdbxGroupWrapper(group: keyFile.body.rootGroup, rootGroup: true);
