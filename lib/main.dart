@@ -53,8 +53,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       hasExternalStoragePermission.value = await checkStoragePermission();
-      logger.d(
-          'hasExternalStoragePermission ${hasExternalStoragePermission.value}');
     });
     return MaterialApp(
         navigatorObservers: [MainNavigatorObserver()],

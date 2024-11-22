@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_file_controller.dart';
 import 'package:r_backup_tool/main.dart';
+import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
+import 'package:r_backup_tool/ui/dialog/android_file_picker_dialog.dart';
+import 'package:r_backup_tool/ui/dialog/dialogs.dart';
 import 'package:r_backup_tool/ui/dialog/password_dialog.dart';
 import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/widgets/content_scaffold.dart';
@@ -81,6 +84,36 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         )),
                     TextButton(
                         onPressed: () async {
+                          if (!hasExternalStoragePermission.value) {
+                            showStoragePermissionDialog(context);
+                            return;
+                          }
+                          final file = await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (_) => const AndroidFilePickerDialog());
+                          if (file != null) {
+                            if (!mounted) return;
+                            PasswordDialog(
+                              onConfirm: (p) async {
+                                LoadingDialog.show();
+                                final result = await keyFileController
+                                    .parseKdbxFile(file, p, externalFile: true)
+                                    .handleError((e) {
+                                  Toast.show(e.toString());
+                                }).single;
+                                LoadingDialog.dismiss();
+                                return true;
+                              },
+                            ).show(context);
+                          }
+                        },
+                        child: const Text(
+                          "打开",
+                          style: AppTextStyle.textWhite,
+                        )),
+                    TextButton(
+                        onPressed: () async {
                           FilePickerResult? result =
                               await FilePicker.platform.pickFiles();
                           if (result != null) {
@@ -89,14 +122,23 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                             PasswordDialog(
                               onConfirm: (p) async {
                                 LoadingDialog.show();
-                                final result = await keyFileController
-                                    .parseKdbxFile(file, p, externalFile: true)
-                                    .handleError((e) {
-                                  // EasyLoading.showToast(e.toString());
+                                KdbxFileWrapper? result =
+                                    await keyFileController
+                                        .parseKdbxFile(file, p,
+                                            externalFile: true)
+                                        .handleError((e) {
                                   Toast.show(e.toString());
                                 }).single;
+                                if (result != null) {
+                                  final importResult = await keyFileController
+                                      .importExternalKeyStore(result, p);
+                                  if (importResult != null) {
+                                    result = null;
+                                    Toast.show(importResult);
+                                  }
+                                }
                                 LoadingDialog.dismiss();
-                                return result;
+                                return true;
                               },
                             ).show(context);
                           } else {
@@ -104,7 +146,7 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                           }
                         },
                         child: const Text(
-                          "打开",
+                          "导入",
                           style: AppTextStyle.textWhite,
                         ))
                   ],

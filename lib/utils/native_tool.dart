@@ -21,3 +21,7 @@ Future<String> getDownloadDirectory() async {
 Future<String> getDocumentDirectory() async {
   return await nativeChannel.invokeMethod('getDocumentDirectory') as String;
 }
+
+Future<String> getExternalDirectory() async {
+  return await nativeChannel.invokeMethod('getExternalDirectory') as String;
+}

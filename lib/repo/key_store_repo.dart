@@ -134,9 +134,6 @@ class KeyStoreRepo {
   }
 
   Future<String?> saveKeyStore(KdbxFileWrapper fileWrapper) async {
-    if (fileWrapper.externalStore.value) {
-      return '外部文件无法保存';
-    }
     if (fileWrapper.encrypted.value || fileWrapper.kdbxFile == null) {
       return '文件未解锁';
     }

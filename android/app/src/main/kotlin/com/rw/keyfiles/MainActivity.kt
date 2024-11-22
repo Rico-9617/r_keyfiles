@@ -106,6 +106,9 @@ class MainActivity : FlutterActivity() {
                 "getDocumentDirectory" -> {
                     result.success(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath)
                 }
+                "getExternalDirectory" -> {
+                    result.success(Environment.getExternalStorageDirectory().absolutePath)
+                }
             }
         }
     }

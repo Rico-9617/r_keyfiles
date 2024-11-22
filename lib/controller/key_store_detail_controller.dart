@@ -9,7 +9,9 @@ import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/utils/encrypt_tool.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 
-class KeyStoreDetailController {
+import 'kdbx_file_controller_mixin.dart';
+
+class KeyStoreDetailController with KdbxFileControllerMixin {
   const KeyStoreDetailController();
 
   Stream<bool> decodeSavedFile(KdbxFileWrapper fileWrapper, String psw) {
@@ -83,37 +85,6 @@ class KeyStoreDetailController {
       return data;
     });
     return null;
-  }
-
-  Future<String?> importExternalKeyStore(
-      KdbxFileWrapper fileWrapper, String psw) async {
-    try {
-      final folder = (await KeyStoreRepo.instance.getInternalFolder()).path;
-      File internalFile =
-          File(p.join(folder, '${fileWrapper.title.value}.kdbx'));
-      while (await internalFile.exists()) {
-        internalFile = File(p.join(folder,
-            '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}.kdbx'));
-      }
-      await File(fileWrapper.path).copy(internalFile.path);
-      await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-        final result = EncryptTool.encrypt(internalFile.path, psw);
-        if (result == null) {
-          throw Exception();
-        } else {
-          data[3] = result;
-        }
-        data[1] = false.toString();
-        return data;
-      });
-      fileWrapper.path = internalFile.path;
-      fileWrapper.externalStore.value = false;
-      logger.d(fileWrapper.path);
-      return null;
-    } catch (e) {
-      logger.e(e);
-    }
-    return '导入失败';
   }
 
   deleteKeyStore(KdbxFileWrapper fileWrapper) async {

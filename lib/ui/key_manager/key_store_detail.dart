@@ -108,15 +108,6 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                       '导入以编辑',
                                       style: AppTextStyle.textButtonBlue,
                                     )),
-                              if (isExternal && !hasStoragePermission)
-                                TextButton(
-                                    onPressed: () {
-                                      showStoragePermissionDialog(context);
-                                    },
-                                    child: const Text(
-                                      '授权以编辑',
-                                      style: AppTextStyle.textButtonBlue,
-                                    )),
                               if (!isExternal || hasStoragePermission)
                                 TextButton(
                                     onPressed: () {

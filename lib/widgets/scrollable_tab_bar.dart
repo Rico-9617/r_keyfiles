@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
 class ScrollableTabBar extends StatefulWidget {
+  final EdgeInsetsGeometry? padding;
   final List<Widget> children;
   final Function(int index)? onTap;
+  final bool scrollToRight;
 
-  const ScrollableTabBar({super.key, required this.children, this.onTap});
+  const ScrollableTabBar(
+      {super.key,
+      required this.children,
+      this.onTap,
+      this.padding,
+      this.scrollToRight = false});
 
   @override
   State createState() => _ScrollableTabBarState();
@@ -43,22 +50,30 @@ class _ScrollableTabBarState extends State<ScrollableTabBar> {
     final List<GlobalKey> itemKeys =
         List.generate(widget.children.length, (_) => GlobalKey());
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.scrollToRight && itemKeys.isNotEmpty) {
+        _scrollToItem(itemKeys.last);
+      }
+    });
     return SingleChildScrollView(
       controller: _scrollController,
       scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (int index = 0; index < widget.children.length; index++) ...[
-            GestureDetector(
-              key: itemKeys[index],
-              onTap: () {
-                widget.onTap?.call(index);
-                _scrollToItem(itemKeys[index]);
-              },
-              child: widget.children[index],
-            )
+      child: Container(
+        padding: widget.padding,
+        child: Row(
+          children: [
+            for (int index = 0; index < widget.children.length; index++) ...[
+              GestureDetector(
+                key: itemKeys[index],
+                onTap: () {
+                  widget.onTap?.call(index);
+                  _scrollToItem(itemKeys[index]);
+                },
+                child: widget.children[index],
+              )
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

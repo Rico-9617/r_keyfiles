@@ -9,31 +9,42 @@ import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/utils/encrypt_tool.dart';
 import 'package:uuid/uuid.dart';
 
-class KeyFileController {
-  Stream<bool> parseKdbxFile(File kdbxFile, String psw,
+import 'kdbx_file_controller_mixin.dart';
+
+class KeyFileController with KdbxFileControllerMixin {
+  Stream<KdbxFileWrapper?> parseKdbxFile(File kdbxFile, String psw,
       {bool externalFile = false}) {
-    final streamController = StreamController<bool>();
+    final streamController = StreamController<KdbxFileWrapper?>();
     Future<void> parse() async {
       final data = KdbxFileWrapper(kdbxFile.path, externalStore: externalFile);
+      final newId = EncryptTool.md5String(kdbxFile.path);
+      final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
+      for (final saved in savedFiles) {
+        if (newId == saved.split('@')[2]) {
+          streamController.addError('文件已存在!');
+          streamController.add(null);
+          await streamController.close();
+          return;
+        }
+      }
       final result = await KeyStoreRepo.instance
           .decryptKdbxFile(data, psw)
           .handleError((e) {
         streamController.addError(e);
       }).single;
       if (!result) {
-        streamController.add(false);
+        streamController.add(null);
         await streamController.close();
         return;
       }
 
-      final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
       savedFiles.add(
-          '${data.title.value}@$externalFile@${const Uuid().v4()}@${EncryptTool.encrypt(data.path, psw)}');
+          '${data.title.value}@$externalFile@${newId}@${EncryptTool.encrypt(data.path, psw)}');
       await KeyStoreRepo.instance.saveFiles(savedFiles);
 
       KeyStoreRepo.instance.savedKeyFiles.addItem(data);
       KeyStoreRepo.instance.currentFile.value = data;
-      streamController.add(true);
+      streamController.add(data);
       await streamController.close();
     }
 

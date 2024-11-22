@@ -16,6 +16,8 @@ class AppColors {
   static const entryItemBackground = Color(0xffa9927d);
   static const entryBackground = detailBackground;
   static const mainTabBackground = Color(0xffefebce);
+  static const folderBackground = entryItemBackground;
+  static const fileBackground = detailBackground;
 
   static const dialogContentBackground = Color(0xffe9f5db);
   static const keyboardKey = Color(0xffedfdda);

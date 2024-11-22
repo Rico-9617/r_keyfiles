@@ -47,6 +47,8 @@ dependencies:
   path_provider: ^2.1.5
   logger: ^2.4.0
   vibration: ^2.0.1
+  dhttpd: ^4.1.0
+  multi_value_listenable_builder: ^0.0.2
 
 dev_dependencies:
   flutter_test:

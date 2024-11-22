@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:r_backup_tool/colors.dart';
-import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:vibration/vibration.dart';
 
@@ -483,18 +482,15 @@ class _PasswordDialogState extends State<PasswordDialog> {
       source.add(PasswordDialog._keyboardSymbolData.split(''));
       scopeIndexes.add(scopeIndex++);
     }
-    logger.d('generate $scopeIndex');
     while (scopeIndexes.length < length) {
       scopeIndexes.add(Random().nextInt(scopeIndex));
     }
     scopeIndexes.shuffle(Random());
-    logger.d('generate $scopeIndexes');
     final result = StringBuffer();
     while (result.length < length) {
       final src = source[scopeIndexes[result.length]];
       result.write(src[Random().nextInt(src.length)]);
     }
-    logger.d('generate $result');
     return result.toString();
   }
 }
