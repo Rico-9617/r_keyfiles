@@ -12,22 +12,24 @@ import 'package:uuid/uuid.dart';
 import 'kdbx_file_controller_mixin.dart';
 
 class KeyFileController with KdbxFileControllerMixin {
-  Stream<KdbxFileWrapper?> parseKdbxFile(File kdbxFile, String psw,
-      {bool externalFile = false}) {
+  Stream<KdbxFileWrapper?> openKdbxFile(File kdbxFile, String psw,
+      {bool externalFile = false, bool import = false}) {
     final streamController = StreamController<KdbxFileWrapper?>();
     Future<void> parse() async {
-      final data = KdbxFileWrapper(kdbxFile.path, externalStore: externalFile);
-      final newId = EncryptTool.md5String(kdbxFile.path);
+      final data = KdbxFileWrapper(kdbxFile.path,
+          externalStore: import ? false : externalFile);
+      data.id =
+          import ? const Uuid().v4() : EncryptTool.md5String(kdbxFile.path);
       final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
       for (final saved in savedFiles) {
-        if (newId == saved.split('@')[2]) {
+        if (data.id == saved.split('@')[2]) {
           streamController.addError('文件已存在!');
           streamController.add(null);
           await streamController.close();
           return;
         }
       }
-      final result = await KeyStoreRepo.instance
+      bool result = await KeyStoreRepo.instance
           .decryptKdbxFile(data, psw)
           .handleError((e) {
         streamController.addError(e);
@@ -37,9 +39,19 @@ class KeyFileController with KdbxFileControllerMixin {
         await streamController.close();
         return;
       }
+      if (import) {
+        final importResult =
+            await importExternalKeyStore(data, psw, save: false);
+        if (importResult != null) {
+          streamController.addError('导入失败!');
+          streamController.add(null);
+          await streamController.close();
+          return;
+        }
+      }
 
       savedFiles.add(
-          '${data.title.value}@$externalFile@${newId}@${EncryptTool.encrypt(data.path, psw)}');
+          '${data.title.value}@${data.externalStore.value}@${data.id}@${EncryptTool.encrypt(data.path, psw)}');
       await KeyStoreRepo.instance.saveFiles(savedFiles);
 
       KeyStoreRepo.instance.savedKeyFiles.addItem(data);

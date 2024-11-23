@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_file_controller.dart';
 import 'package:r_backup_tool/main.dart';
-import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/android_file_picker_dialog.dart';
@@ -97,8 +96,8 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                             PasswordDialog(
                               onConfirm: (p) async {
                                 LoadingDialog.show();
-                                final result = await keyFileController
-                                    .parseKdbxFile(file, p, externalFile: true)
+                                await keyFileController
+                                    .openKdbxFile(file, p, externalFile: true)
                                     .handleError((e) {
                                   Toast.show(e.toString());
                                 }).single;
@@ -114,36 +113,33 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         )),
                     TextButton(
                         onPressed: () async {
-                          FilePickerResult? result =
-                              await FilePicker.platform.pickFiles();
-                          if (result != null) {
-                            final file = File(result.files.single.path!);
-                            if (!(await file.exists()) || !mounted) return;
-                            PasswordDialog(
-                              onConfirm: (p) async {
-                                LoadingDialog.show();
-                                KdbxFileWrapper? result =
-                                    await keyFileController
-                                        .parseKdbxFile(file, p,
-                                            externalFile: true)
-                                        .handleError((e) {
-                                  Toast.show(e.toString());
-                                }).single;
-                                if (result != null) {
-                                  final importResult = await keyFileController
-                                      .importExternalKeyStore(result, p);
-                                  if (importResult != null) {
-                                    result = null;
-                                    Toast.show(importResult);
-                                  }
-                                }
-                                LoadingDialog.dismiss();
-                                return true;
-                              },
-                            ).show(context);
+                          File? file;
+                          if (hasExternalStoragePermission.value) {
+                            file = await showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (_) =>
+                                    const AndroidFilePickerDialog());
                           } else {
-                            Toast.show('文件解析失败！');
+                            FilePickerResult? result =
+                                await FilePicker.platform.pickFiles();
+                            if (result != null) {
+                              file = File(result.files.single.path!);
+                            }
                           }
+                          if (file == null || !mounted) return;
+                          PasswordDialog(
+                            onConfirm: (p) async {
+                              LoadingDialog.show();
+                              await keyFileController
+                                  .openKdbxFile(file!, p, import: true)
+                                  .handleError((e) {
+                                Toast.show(e.toString());
+                              }).single;
+                              LoadingDialog.dismiss();
+                              return true;
+                            },
+                          ).show(context);
                         },
                         child: const Text(
                           "导入",

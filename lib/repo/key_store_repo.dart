@@ -25,7 +25,7 @@ class KeyStoreRepo {
   final ValueNotifier<KdbxFileWrapper?> currentFile =
       ValueNotifier<KdbxFileWrapper?>(null);
 
-  loadSavedFiles() async {
+  Future loadSavedFiles() async {
     final savedFiles = await getSavedFiles();
     if (savedFiles.isEmpty) return;
     savedKeyFiles.value = List.generate(savedFiles.length, (index) {
@@ -111,7 +111,7 @@ class KeyStoreRepo {
     await conf.writeAsBytes(dataList.join('<kf>').codeUnits, flush: true);
   }
 
-  updateSavedFiles(KdbxFileWrapper fileWrapper,
+  Future updateSavedFiles(KdbxFileWrapper fileWrapper,
       List<String> Function(List<String> target) onUpdate) async {
     final savedList = await KeyStoreRepo.instance.getSavedFiles();
     for (int index = 0; index < savedList.length; index++) {

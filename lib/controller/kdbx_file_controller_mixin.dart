@@ -8,7 +8,8 @@ import 'package:r_backup_tool/utils/encrypt_tool.dart';
 
 mixin KdbxFileControllerMixin {
   Future<String?> importExternalKeyStore(
-      KdbxFileWrapper fileWrapper, String psw) async {
+      KdbxFileWrapper fileWrapper, String psw,
+      {bool save = true}) async {
     try {
       final folder = (await KeyStoreRepo.instance.getInternalFolder()).path;
       File internalFile =
@@ -18,16 +19,19 @@ mixin KdbxFileControllerMixin {
             '${fileWrapper.title.value}_${DateTime.now().millisecondsSinceEpoch}.kdbx'));
       }
       await File(fileWrapper.path).copy(internalFile.path);
-      await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-        final result = EncryptTool.encrypt(internalFile.path, psw);
-        if (result == null) {
-          throw Exception();
-        } else {
-          data[3] = result;
-        }
-        data[1] = false.toString();
-        return data;
-      });
+      if (save) {
+        await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
+          final result = EncryptTool.encrypt(internalFile.path, psw);
+          if (result == null) {
+            throw Exception();
+          } else {
+            data[3] = result;
+          }
+          data[1] = false.toString();
+          return data;
+        });
+      }
+
       fileWrapper.path = internalFile.path;
       fileWrapper.externalStore.value = false;
       return null;
