@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:r_backup_tool/foundation/list_value_notifier.dart';
+import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 
 class AndroidFilePickerController {
@@ -33,8 +34,10 @@ class AndroidFilePickerController {
   }
 
   Future goBack(int index) async {
-    if (index <= 0 || directories.size == 1) return;
+    logger.d('filedialog goback $index ${directories.size}');
+    if (index < 0 || directories.size == 1) return;
     directories.removeRangeItems(index + 1, directories.size);
+    logger.d('filedialog goback $index ${directories.size}');
     await listFiles(directories.value[index]);
   }
 }

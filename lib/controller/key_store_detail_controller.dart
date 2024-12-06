@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:kdbx_lib/kdbx.dart';
@@ -6,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/model/kdbx_file_wrapper.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
-import 'package:r_backup_tool/utils/encrypt_tool.dart';
 import 'package:r_backup_tool/utils/native_tool.dart';
 
 import 'kdbx_file_controller_mixin.dart';
@@ -18,13 +18,7 @@ class KeyStoreDetailController with KdbxFileControllerMixin {
     final streamController = StreamController<bool>();
     Future<void> parse() async {
       try {
-        final path = EncryptTool.decrypt(fileWrapper.path, psw);
-        if (path == null) {
-          streamController.addError('密码错误!');
-          streamController.add(false);
-          await streamController.close();
-          return;
-        }
+        final path = String.fromCharCodes(base64Decode(fileWrapper.path));
         fileWrapper.path = path;
         final file = File(fileWrapper.path);
         if (await file.exists()) {
@@ -76,8 +70,8 @@ class KeyStoreDetailController with KdbxFileControllerMixin {
     if (saveResult != null) return saveResult;
 
     await KeyStoreRepo.instance.updateSavedFiles(fileWrapper, (data) {
-      final result = EncryptTool.encrypt(fileWrapper.path, psw);
-      if (result == null) {
+      final result = base64Encode(fileWrapper.path.codeUnits);
+      if (result.isEmpty) {
         throw Exception();
       } else {
         data[3] = result;

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:kdbx_lib/kdbx.dart';
@@ -40,8 +41,7 @@ class KeyFileController with KdbxFileControllerMixin {
         return;
       }
       if (import) {
-        final importResult =
-            await importExternalKeyStore(data, psw, save: false);
+        final importResult = await importExternalKeyStore(data, save: false);
         if (importResult != null) {
           streamController.addError('导入失败!');
           streamController.add(null);
@@ -51,7 +51,7 @@ class KeyFileController with KdbxFileControllerMixin {
       }
 
       savedFiles.add(
-          '${data.title.value}@${data.externalStore.value}@${data.id}@${EncryptTool.encrypt(data.path, psw)}');
+          '${data.title.value}@${data.externalStore.value}@${data.id}@${base64Encode(data.path.codeUnits)}');
       await KeyStoreRepo.instance.saveFiles(savedFiles);
 
       KeyStoreRepo.instance.savedKeyFiles.addItem(data);
@@ -69,7 +69,7 @@ class KeyFileController with KdbxFileControllerMixin {
       final keyFile = KeyStoreRepo.instance.kdbxFormat
           .create(Credentials(ProtectedValue.fromString(psw)), name);
       final folder = (await KeyStoreRepo.instance.getInternalFolder()).path;
-      File internalFile = File(p.join(folder, '${name}.kdbx'));
+      File internalFile = File(p.join(folder, '$name.kdbx'));
       while (await internalFile.exists()) {
         internalFile = File(p.join(
             folder, '${name}_${DateTime.now().millisecondsSinceEpoch}.kdbx'));
@@ -82,7 +82,7 @@ class KeyFileController with KdbxFileControllerMixin {
       wrapper.id = const Uuid().v4();
       final savedFiles = await KeyStoreRepo.instance.getSavedFiles();
       savedFiles.add(
-          '$name@false@${wrapper.id}@${EncryptTool.encrypt(wrapper.path, psw)}');
+          '$name@false@${wrapper.id}@${base64Encode(wrapper.path.codeUnits)}');
       await KeyStoreRepo.instance.saveFiles(savedFiles);
       wrapper.title.value = name;
       wrapper.rootGroup =

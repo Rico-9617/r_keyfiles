@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:ellipsized_text/ellipsized_text.dart';
 import 'package:flutter/material.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/android_file_picker_controller.dart';
@@ -71,7 +72,7 @@ class _AndroidFilePickerState extends State<StatefulWidget> {
                   return Column(children: [
                     if (folders.length > 1)
                       buildFolderItem('.. 返回上一级', () {
-                        _controller.goBack(_controller.directories.size - 1);
+                        _controller.goBack(_controller.directories.size - 2);
                       }),
                     if (folders.length > 1) divider,
                     Expanded(
@@ -120,8 +121,9 @@ class _AndroidFilePickerState extends State<StatefulWidget> {
         height: 45,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.centerLeft,
-        child: Text(
+        child: EllipsizedText(
           title,
+          type: EllipsisType.middle,
           style: const TextStyle(
               color: AppColors.textTitle, fontSize: AppTextStyle.text_title),
         ),
@@ -138,8 +140,9 @@ class _AndroidFilePickerState extends State<StatefulWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         height: 40,
         alignment: Alignment.centerLeft,
-        child: Text(
+        child: EllipsizedText(
           title,
+          type: EllipsisType.middle,
           style: AppTextStyle.textEntityItemTitle.copyWith(
               color: title.endsWith('.kdbx')
                   ? AppColors.textClick

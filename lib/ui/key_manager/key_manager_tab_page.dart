@@ -114,19 +114,19 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                     TextButton(
                         onPressed: () async {
                           File? file;
-                          if (hasExternalStoragePermission.value) {
-                            file = await showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (_) =>
-                                    const AndroidFilePickerDialog());
-                          } else {
-                            FilePickerResult? result =
-                                await FilePicker.platform.pickFiles();
-                            if (result != null) {
-                              file = File(result.files.single.path!);
-                            }
+                          // if (hasExternalStoragePermission.value) {
+                          //   file = await showModalBottomSheet(
+                          //       context: context,
+                          //       isScrollControlled: true,
+                          //       builder: (_) =>
+                          //           const AndroidFilePickerDialog());
+                          // } else {
+                          FilePickerResult? result =
+                              await FilePicker.platform.pickFiles();
+                          if (result != null) {
+                            file = File(result.files.single.path!);
                           }
+                          // }
                           if (file == null || !mounted) return;
                           PasswordDialog(
                             onConfirm: (p) async {

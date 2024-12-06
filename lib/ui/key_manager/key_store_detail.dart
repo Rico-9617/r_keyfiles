@@ -87,22 +87,16 @@ class _KeyStoreDetailState extends State<KeyStoreDetail> {
                                   )),
                               if (isExternal && !hasStoragePermission)
                                 TextButton(
-                                    onPressed: () {
-                                      PasswordDialog(
-                                        onConfirm: (p) async {
-                                          LoadingDialog.show();
-                                          final result = await widget
-                                              .detailController
-                                              .importExternalKeyStore(
-                                                  widget.keyFile, p);
-                                          if (result != null &&
-                                              result.isNotEmpty) {
-                                            Toast.show(result);
-                                          }
-                                          LoadingDialog.dismiss();
-                                          return result == null;
-                                        },
-                                      ).show(context);
+                                    onPressed: () async {
+                                      LoadingDialog.show();
+                                      final result = await widget
+                                          .detailController
+                                          .importExternalKeyStore(
+                                              widget.keyFile);
+                                      if (result != null && result.isNotEmpty) {
+                                        Toast.show(result);
+                                      }
+                                      LoadingDialog.dismiss();
                                     },
                                     child: const Text(
                                       '导入以编辑',
