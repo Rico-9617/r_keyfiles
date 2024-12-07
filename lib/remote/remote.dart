@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:r_backup_tool/colors.dart';
-import 'package:r_backup_tool/main.dart';
 import 'package:r_backup_tool/remote/server/web_server.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/tips_dialog.dart';
@@ -99,7 +98,6 @@ class Remote extends StatelessWidget {
               ValueListenableBuilder(
                   valueListenable: serverState,
                   builder: (_, state, __) {
-                    logger.e('statechange $state ${StackTrace.current}');
                     return state == 0
                         ? Column(
                             children: [
@@ -170,7 +168,28 @@ class Remote extends StatelessWidget {
                                         data: webServer.serverAddress,
                                         version: QrVersions.auto,
                                         size: 200,
-                                      )
+                                      ),
+                                      const SizedBox(
+                                        height: 30,
+                                      ),
+                                      const Text(
+                                        '验证码',
+                                        style: AppTextStyle.textPrimary,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+                                      ValueListenableBuilder(
+                                        builder: (_, code, __) {
+                                          return Text(
+                                            code,
+                                            style: AppTextStyle.textPrimary,
+                                            textAlign: TextAlign.center,
+                                          );
+                                        },
+                                        valueListenable: webServer.passcode,
+                                      ),
                                     ],
                                   );
                   })

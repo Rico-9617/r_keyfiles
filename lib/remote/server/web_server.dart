@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart';
@@ -36,12 +37,13 @@ class WebServer {
       pipeline = pipeline.addMiddleware(shelf.logRequests());
     }
     try {
+      passcode.value = (10000000 + Random().nextInt(80000000)).toString();
       final handler = Cascade()
           .add(createStaticHandler(
             webFolder.path,
             defaultDocument: 'index.html',
           ))
-          .add(ApiServer().apiRouter.call)
+          .add(ApiServer().createApiRouter(passcode.value).call)
           .handler;
       final corsHandler =
           pipeline.addMiddleware(corsHeaders()).addHandler(handler);
