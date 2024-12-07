@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:r_backup_tool/colors.dart';
 import 'package:r_backup_tool/controller/key_file_controller.dart';
 import 'package:r_backup_tool/main.dart';
+import 'package:r_backup_tool/remote/remote.dart';
 import 'package:r_backup_tool/repo/key_store_repo.dart';
 import 'package:r_backup_tool/styles.dart';
 import 'package:r_backup_tool/ui/dialog/android_file_picker_dialog.dart';
@@ -15,6 +16,7 @@ import 'package:r_backup_tool/ui/dialog/text_input_dialog.dart';
 import 'package:r_backup_tool/widgets/content_scaffold.dart';
 import 'package:r_backup_tool/widgets/dialogs.dart';
 import 'package:r_backup_tool/widgets/scrollable_tab_bar.dart';
+import 'package:r_backup_tool/widgets/transparent_page_route.dart';
 
 import 'key_store_detail.dart';
 
@@ -114,19 +116,11 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                     TextButton(
                         onPressed: () async {
                           File? file;
-                          // if (hasExternalStoragePermission.value) {
-                          //   file = await showModalBottomSheet(
-                          //       context: context,
-                          //       isScrollControlled: true,
-                          //       builder: (_) =>
-                          //           const AndroidFilePickerDialog());
-                          // } else {
                           FilePickerResult? result =
                               await FilePicker.platform.pickFiles();
                           if (result != null) {
                             file = File(result.files.single.path!);
                           }
-                          // }
                           if (file == null || !mounted) return;
                           PasswordDialog(
                             onConfirm: (p) async {
@@ -143,6 +137,16 @@ class _KeyManagerTabPageState extends State<KeyManagerTabPage>
                         },
                         child: const Text(
                           "导入",
+                          style: AppTextStyle.textWhite,
+                        )),
+                    const Spacer(),
+                    TextButton(
+                        onPressed: () async {
+                          Navigator.of(context)
+                              .push(buildTransparentPageRoute(Remote()));
+                        },
+                        child: const Text(
+                          "其它端打开",
                           style: AppTextStyle.textWhite,
                         ))
                   ],
