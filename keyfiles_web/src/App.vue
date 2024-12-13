@@ -1,15 +1,30 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <FileList msg="Welcome to Your Vue.js App"/>
+  <FileList msg="Welcome to Your Vue.js App" />
+  <Modal :is-visible="showPasscode">
+    <PassCodeDialog />
+  </Modal>
 </template>
 
 <script>
-import FileList from './components/FileList.vue'
+import Modal from './components/dialogs/ModalScaffold.vue';
+import PassCodeDialog from './components/dialogs/PassCodeDialog.vue';
+import FileList from './components/FileList.vue';
 
 export default {
   name: 'App',
   components: {
-    FileList
+    PassCodeDialog,
+    Modal,
+    FileList,
+  },
+  data() {
+    return {
+      showPasscode: false,
+    };
+  },
+  mounted(){
+    this.showPasscode = true;
   }
 }
 </script>

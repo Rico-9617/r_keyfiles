@@ -31,7 +31,9 @@ class WebServer {
     final ip = await HostController.instance.loadIPAddress();
     if (ip.isEmpty) return false;
     port = generatePortNumber();
-    var pipeline = const shelf.Pipeline();
+    var pipeline = const shelf.Pipeline()
+        .addMiddleware(corsHeadersMiddleware())
+        .addMiddleware(handleOptionsRequests());
 
     if (kDebugMode) {
       pipeline = pipeline.addMiddleware(shelf.logRequests());
@@ -45,8 +47,7 @@ class WebServer {
           ))
           .add(ApiServer().createApiRouter(passcode.value).call)
           .handler;
-      final corsHandler =
-          pipeline.addMiddleware(corsHeaders()).addHandler(handler);
+      final corsHandler = pipeline.addHandler(handler);
 
       shelf_io.serve(corsHandler.call, ip, port).then((server) {
         print('Serving at http://${server.address.host}:${server.port}');
@@ -95,17 +96,4 @@ class WebServer {
   stopServer() {
     server?.close();
   }
-}
-
-Middleware corsHeaders() {
-  return (Handler handler) {
-    return (Request request) async {
-      final response = await handler(request);
-      return response.change(headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-        'Access-Control-Allow-Headers': 'Origin,Content-Type',
-      });
-    };
-  };
 }

@@ -1,0 +1,37 @@
+
+:root {
+    --color-background: #efebce;
+    --color-title-bg: #5e503f;
+    --color-group-item-bg: #22333b;
+    --color-group-bg: var(--color-background);
+    --color-entry-item-bg: #a9927d;
+    --color-entry-bg: var(--color-background);
+    --color-dialog-content-bg: #e9f5db;
+    --color-button-bg: var(--color-title-bg);
+    --color-editor-line: var(--color-title-bg);
+    --color-editor-line-focused: var(--color-text-click);
+    --color-text-0: #333333;
+    --color-text-click: #03045e;
+    --color-text-title: #e0fbfc;
+    --color-text-disable: gray;
+    --text-title: 20px;
+    --text-operation: 14px;
+    --text-tab: 16px;
+    --text-tab-selected: 18px;
+    --text-normal: 16px;
+    --text-list-title: 18px;
+    --text-dialog_button: 14px;
+}
+
+
+.input-text { 
+    background-color: transparent; 
+    border: none; 
+    border-bottom: 1px solid var(--color-editor-line);  
+    outline: none;
+    padding: 5px;  
+}
+
+.input-text:focus{
+    border-bottom: 2px solid var(--color-editor-line-focused);  
+}

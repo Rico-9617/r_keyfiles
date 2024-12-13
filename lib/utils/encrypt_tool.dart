@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encryptKey;
-import 'package:r_backup_tool/main.dart';
 
 class EncryptTool {
   EncryptTool._();
@@ -20,7 +19,7 @@ class EncryptTool {
           .encrypt(data, iv: encryptKey.IV.fromLength(16))
           .bytes);
     } catch (e) {
-      logger.e('encError: $e');
+      print('encError: $e');
       return null;
     }
   }
@@ -31,7 +30,7 @@ class EncryptTool {
           encryptKey.Encrypted(base64Decode(data)),
           iv: encryptKey.IV.fromLength(16));
     } catch (e) {
-      logger.e('encError: $e');
+      print('encError: $e');
       return null;
     }
   }
